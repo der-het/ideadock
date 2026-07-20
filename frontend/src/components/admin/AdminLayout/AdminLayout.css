@@ -1,0 +1,181 @@
+.admin-layout-root {
+  display: flex;
+  min-height: 100vh;
+  background-color: var(--color-background);
+  font-family: var(--font-sans);
+}
+
+.admin-layout-main {
+  flex-grow: 1;
+  margin-left: var(--spacing-sidebar-width);
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  box-sizing: border-box;
+}
+
+.admin-content-canvas {
+  flex-grow: 1;
+  margin-top: var(--header-height);
+  padding: 32px;
+  box-sizing: border-box;
+  overflow-y: auto;
+}
+
+.admin-content-inner {
+  max-width: 1440px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+/* Custom layout helpers matching bento style card groupings */
+.admin-page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  margin-bottom: 32px;
+}
+
+.admin-page-title-box {
+  display: flex;
+  flex-direction: column;
+}
+
+.admin-page-title {
+  font-family: var(--font-sans);
+  font-size: var(--headline-md-fontSize, 24px);
+  font-weight: 700;
+  color: var(--color-on-surface);
+  margin: 0;
+}
+
+.admin-page-subtitle {
+  font-family: var(--font-sans);
+  font-size: var(--body-md-fontSize, 14px);
+  color: var(--color-on-surface-variant);
+  margin: 4px 0 0 0;
+  font-weight: 400;
+}
+
+.admin-header-actions {
+  display: flex;
+  gap: 12px;
+}
+
+/* Reusable UI Buttons */
+.btn-primary {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background-color: var(--color-primary);
+  color: var(--color-on-primary);
+  border: none;
+  height: 40px;
+  padding: 0 16px;
+  border-radius: var(--radius-md);
+  font-family: var(--font-sans);
+  font-size: var(--label-md-fontSize, 12px);
+  font-weight: 700;
+  cursor: pointer;
+  transition: opacity 0.2s, transform 0.1s;
+  outline: none;
+}
+
+.btn-primary:hover {
+  opacity: 0.9;
+}
+
+.btn-primary:active {
+  transform: scale(0.98);
+}
+
+.btn-secondary {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background-color: var(--color-surface);
+  color: var(--color-on-surface-variant);
+  border: 1px solid var(--color-outline-variant);
+  height: 40px;
+  padding: 0 16px;
+  border-radius: var(--radius-md);
+  font-family: var(--font-sans);
+  font-size: var(--label-md-fontSize, 12px);
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  outline: none;
+}
+
+.btn-secondary:hover {
+  background-color: var(--color-surface-low);
+  border-color: var(--color-outline);
+  color: var(--color-on-surface);
+}
+
+.btn-secondary:active {
+  transform: scale(0.98);
+}
+
+/* Callouts / Bento tips */
+.tips-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 24px;
+  margin-top: 40px;
+}
+
+.tips-card {
+  display: flex;
+  gap: 16px;
+  padding: 24px;
+  border-radius: var(--radius-lg);
+  background-color: rgba(0, 74, 198, 0.03);
+  border: 1px solid rgba(0, 74, 198, 0.08);
+}
+
+.tips-card.secondary-tip {
+  background-color: rgba(80, 95, 118, 0.03);
+  border: 1px solid rgba(80, 95, 118, 0.08);
+}
+
+.tips-icon-wrapper {
+  width: 48px;
+  height: 48px;
+  border-radius: var(--radius-full);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.tips-card:not(.secondary-tip) .tips-icon-wrapper {
+  background-color: rgba(0, 74, 198, 0.08);
+  color: var(--color-primary);
+}
+
+.tips-card.secondary-tip .tips-icon-wrapper {
+  background-color: rgba(80, 95, 118, 0.08);
+  color: var(--color-secondary);
+}
+
+.tips-content {
+  display: flex;
+  flex-direction: column;
+}
+
+.tips-title {
+  font-family: var(--font-sans);
+  font-size: var(--headline-sm-fontSize, 16px);
+  font-weight: 700;
+  color: var(--color-on-surface);
+  margin: 0;
+}
+
+.tips-description {
+  font-family: var(--font-sans);
+  font-size: var(--body-md-fontSize, 14px);
+  color: var(--color-on-surface-variant);
+  margin: 6px 0 0 0;
+  line-height: 1.5;
+}

@@ -1,0 +1,101 @@
+.stat-card-widget {
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-outline-variant);
+  border-radius: var(--radius-lg);
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  transition: box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.stat-card-widget:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
+  border-color: var(--color-outline);
+}
+
+.stat-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.stat-card-icon-wrapper {
+  background-color: var(--color-surface-container);
+  color: var(--color-primary);
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.stat-card-icon {
+  color: var(--color-primary);
+}
+
+.stat-card-trend {
+  font-family: var(--font-sans);
+  font-size: var(--label-sm-fontSize, 11px);
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: var(--radius-full);
+  display: flex;
+  align-items: center;
+}
+
+.trend-success {
+  background-color: var(--color-success-container);
+  color: var(--color-on-success-container);
+}
+
+.trend-warning {
+  background-color: var(--color-warning-container);
+  color: var(--color-on-warning-container);
+}
+
+.trend-error {
+  background-color: var(--color-error-container);
+  color: var(--color-on-error-container);
+}
+
+.trend-neutral {
+  background-color: var(--color-surface-container-high);
+  color: var(--color-on-surface-variant);
+}
+
+.stat-card-body {
+  display: flex;
+  flex-direction: column;
+}
+
+.stat-card-title {
+  margin: 0 0 4px 0;
+  color: var(--color-on-surface-variant);
+  font-size: var(--label-md-fontSize, 12px);
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+.stat-card-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+}
+
+.stat-card-value {
+  margin: 0;
+  color: var(--color-on-surface);
+  font-size: var(--headline-sm-fontSize, 24px);
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.stat-card-sparkline {
+  width: 80px;
+  height: 32px;
+  display: block;
+}

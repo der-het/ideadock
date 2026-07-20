@@ -1,0 +1,10 @@
+/* Landing Page Specific Styles */
+
+.landing-container {
+  /* Layout-level constraints if needed */
+}
+
+/* Dynamic radial background for call-to-action */
+.cta-background-radial {
+  background-image: radial-gradient(var(--tw-gradient-stops, circle at center, rgba(30, 27, 75, 0.4), transparent, transparent));
+}
