@@ -19,11 +19,6 @@ export default function Sidebar({
 }) {
   const menuItems = [
     {
-      label: "Dashboard",
-      icon: LayoutDashboard,
-      path: "/admin",
-    },
-    {
       label: "Manage Startup Ideas",
       icon: Lightbulb,
       path: "/admin/startups",
@@ -34,19 +29,9 @@ export default function Sidebar({
       path: "/admin/users",
     },
     {
-      label: "Manage Categories",
-      icon: FolderTree,
-      path: "/admin/categories",
-    },
-    {
       label: "Join Requests",
       icon: UserPlus,
       path: "/admin/requests",
-    },
-    {
-      label: "Reports",
-      icon: FileBarChart,
-      path: "/admin/reports",
     },
   ];
 

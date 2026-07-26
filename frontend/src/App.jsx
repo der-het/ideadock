@@ -3,10 +3,12 @@ import {
   Routes,
   Route,
   useLocation,
+  Navigate,
+  Outlet,
 } from "react-router-dom";
 import { useEffect } from "react";
 
-import { AppProvider } from "./context/AppContext.jsx";
+import { AppProvider, useApp } from "./context/AppContext.jsx";
 
 // Layout
 import Navbar from "./components/layout/Navbar.jsx";
@@ -25,12 +27,23 @@ import Profile from "./pages/Profile/Profile.jsx";
 import AdminLayout from "./components/admin/AdminLayout/AdminLayout.jsx";
 
 // Admin Pages
-import AdminDashboard from "./pages/Admin/Dashboard/Dashboard.jsx";
 import ManageUsers from "./pages/Admin/ManageUsers/ManageUsers.jsx";
 import ManageStartupIdeas from "./pages/Admin/ManageStartupIdeas/ManageStartupIdeas.jsx";
 import ManageCategories from "./pages/Admin/ManageCategories/ManageCategories.jsx";
 import ManageJoinRequests from "./pages/Admin/ManageJoinRequests/ManageJoinRequests.jsx";
 import Reports from "./pages/Admin/Reports/Reports.jsx";
+
+// Admin Route Guard Component
+function AdminRoute() {
+  const { currentUser, user } = useApp();
+  const activeUser = currentUser || user;
+
+  if (!activeUser || activeUser.role !== "admin") {
+    return <Navigate to="/login" replace />;
+  }
+
+  return <Outlet />;
+}
 
 function ScrollToTop() {
   const { pathname } = useLocation();
@@ -45,18 +58,23 @@ function ScrollToTop() {
 function LayoutWrapper({ children }) {
   const location = useLocation();
 
-  const hideLayout =
+  // Hide top navbar only on login/register pages
+  const hideNavbar =
+    location.pathname === "/login" || location.pathname === "/register";
+
+  // Hide footer on auth pages and admin routes
+  const hideFooter =
     location.pathname === "/login" ||
     location.pathname === "/register" ||
     location.pathname.startsWith("/admin");
 
   return (
     <div className="flex flex-col min-h-screen">
-      {!hideLayout && <Navbar />}
+      {!hideNavbar && <Navbar />}
 
       <div className="flex-grow">{children}</div>
 
-      {!hideLayout && <Footer />}
+      {!hideFooter && <Footer />}
     </div>
   );
 }
@@ -70,37 +88,29 @@ export default function App() {
         <LayoutWrapper>
           <Routes>
             {/* Public Routes */}
-
             <Route path="/" element={<Landing />} />
-
             <Route path="/login" element={<Login />} />
-
             <Route path="/register" element={<Register />} />
-
             <Route path="/dashboard" element={<Dashboard />} />
-
             <Route path="/browse" element={<BrowseStartups />} />
-
             <Route path="/startup" element={<StartupDetails />} />
-
             <Route path="/startup/:id" element={<StartupDetails />} />
-
             <Route path="/profile" element={<Profile />} />
 
-            {/* Admin Routes */}
-
-            <Route path="/admin" element={<AdminLayout />}>
-              <Route index element={<AdminDashboard />} />
-
-              <Route path="users" element={<ManageUsers />} />
-
-              <Route path="startups" element={<ManageStartupIdeas />} />
-
-              <Route path="categories" element={<ManageCategories />} />
-
-              <Route path="requests" element={<ManageJoinRequests />} />
-
-              <Route path="reports" element={<Reports />} />
+            {/* Protected Admin Routes */}
+            <Route element={<AdminRoute />}>
+              <Route path="/admin" element={<AdminLayout />}>
+                {/* Default route redirects to /admin/startups */}
+                <Route
+                  index
+                  element={<Navigate to="/admin/startups" replace />}
+                />
+                <Route path="startups" element={<ManageStartupIdeas />} />
+                <Route path="users" element={<ManageUsers />} />
+                <Route path="categories" element={<ManageCategories />} />
+                <Route path="requests" element={<ManageJoinRequests />} />
+                <Route path="reports" element={<Reports />} />
+              </Route>
             </Route>
           </Routes>
         </LayoutWrapper>

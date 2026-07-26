@@ -1,118 +1,179 @@
 import { createContext, useContext, useState, useEffect } from "react";
-import { STARTUPS, USER_SARAH, USER_ALEX } from "../constants/data.js";
+import axios from "axios";
+
+// Base API URL
+const API_URL = "http://localhost:5000/api";
 
 const AppContext = createContext();
 
 export function AppProvider({ children }) {
-  // Try to load state from localStorage or use defaults
+  // Load initial user state from localStorage
   const [currentUser, setCurrentUser] = useState(() => {
     const saved = localStorage.getItem("sc_user");
-    return saved ? JSON.parse(saved) : USER_SARAH;
+    return saved ? JSON.parse(saved) : null;
   });
 
+  const [startups, setStartups] = useState([]);
+  const [joinRequests, setJoinRequests] = useState([]);
   const [bookmarks, setBookmarks] = useState(() => {
     const saved = localStorage.getItem("sc_bookmarks");
-    return saved ? JSON.parse(saved) : ["solarisgrid", "neuralpath"];
-  });
-
-  const [joinRequests, setJoinRequests] = useState(() => {
-    const saved = localStorage.getItem("sc_join_requests");
     return saved ? JSON.parse(saved) : [];
   });
+  const [loading, setLoading] = useState(false);
 
-  const [startups, setStartups] = useState(() => {
-    const saved = localStorage.getItem("sc_startups");
-    return saved ? JSON.parse(saved) : STARTUPS;
-  });
-
-  // Sync state with localStorage
+  // Sync user and bookmarks with localStorage
   useEffect(() => {
-    localStorage.setItem("sc_user", JSON.stringify(currentUser));
+    if (currentUser) {
+      localStorage.setItem("sc_user", JSON.stringify(currentUser));
+    } else {
+      localStorage.removeItem("sc_user");
+    }
   }, [currentUser]);
 
   useEffect(() => {
     localStorage.setItem("sc_bookmarks", JSON.stringify(bookmarks));
   }, [bookmarks]);
 
+  // Fetch Startups from API on Mount
   useEffect(() => {
-    localStorage.setItem("sc_join_requests", JSON.stringify(joinRequests));
-  }, [joinRequests]);
+    fetchStartups();
+  }, []);
 
+  // Fetch user requests if a user is logged in
   useEffect(() => {
-    localStorage.setItem("sc_startups", JSON.stringify(startups));
-  }, [startups]);
+    if (currentUser?._id || currentUser?.id) {
+      fetchUserRequests(currentUser._id || currentUser.id);
+    }
+  }, [currentUser]);
 
-  // Actions
-  const toggleBookmark = (startupId) => {
-    setBookmarks((prev) => {
-      if (prev.includes(startupId)) {
-        return prev.filter((id) => id !== startupId);
-      } else {
-        return [...prev, startupId];
-      }
-    });
+  // 1. Fetch All Startups
+  const fetchStartups = async () => {
+    try {
+      setLoading(true);
+      const res = await axios.get(`${API_URL}/startups`);
+      setStartups(res.data.data || res.data);
+    } catch (err) {
+      console.error("Error fetching startups:", err);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const submitJoinRequest = (startupId, roleId, roleTitle, note = "") => {
-    const newRequest = {
-      id: `req-${Date.now()}`,
-      startupId,
-      roleId,
-      roleTitle,
-      note,
-      status: "pending", // 'pending', 'approved', 'declined'
-      timestamp: new Date().toISOString(),
-    };
-    setJoinRequests((prev) => [newRequest, ...prev]);
+  // 2. Fetch User Join Requests
+  const fetchUserRequests = async (userId) => {
+    try {
+      const res = await axios.get(`${API_URL}/requests/user/${userId}`);
+      setJoinRequests(res.data.data || res.data);
+    } catch (err) {
+      console.error("Error fetching requests:", err);
+    }
   };
 
-  const updateProfile = (updatedProfile) => {
-    setCurrentUser((prev) => ({
-      ...prev,
-      ...updatedProfile,
-    }));
+  // 3. Auth: Login
+  const login = async (email, password) => {
+    try {
+      const res = await axios.post(`${API_URL}/auth/login`, {
+        email,
+        password,
+      });
+
+      const user = res.data.user || res.data;
+      setCurrentUser(user);
+      return { success: true, user };
+    } catch (err) {
+      const message = err.response?.data?.message || "Login failed";
+      return { success: false, message };
+    }
   };
 
-  const login = (email, password) => {
-    // Basic mock authentication
-    const mockUser = email.toLowerCase().includes("alex")
-      ? USER_ALEX
-      : {
-          ...USER_SARAH,
-          name:
-            email
-              .split("@")[0]
-              .split(".")
-              .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
-              .join(" ") || "User",
-        };
-    setCurrentUser(mockUser);
-    return mockUser;
+  // 4. Auth: Register
+  const register = async (userData) => {
+    try {
+      const res = await axios.post(`${API_URL}/auth/register`, userData);
+      const user = res.data.user || res.data;
+      setCurrentUser(user);
+      return { success: true, user };
+    } catch (err) {
+      const message = err.response?.data?.message || "Registration failed";
+      return { success: false, message };
+    }
   };
 
-  const register = (userData) => {
-    const newUser = {
-      ...USER_SARAH,
-      name: userData.fullName,
-      email: userData.email,
-      phone: userData.phone,
-      title: "Aspiring Collaborator",
-      skills: [],
-      experience: [],
-      projects: [],
-      stats: {
-        completedProjects: 0,
-        teamsJoined: 0,
-        bookmarks: 0,
-        endorsements: 0,
-      },
-    };
-    setCurrentUser(newUser);
-    return newUser;
-  };
-
+  // 5. Auth: Logout
   const logout = () => {
     setCurrentUser(null);
+    setJoinRequests([]);
+    localStorage.removeItem("sc_user");
+  };
+
+  // 6. Submit Join Request
+  // 6. Submit Join Request
+  // 6. Submit Join Request
+  const submitJoinRequest = async (startupId, roleId, roleTitle, note = "") => {
+    try {
+      const payload = {
+        userId: currentUser?._id || currentUser?.id,
+        startupId,
+        roleRequested: roleTitle,
+        message: note,
+      };
+
+      const res = await axios.post(`${API_URL}/requests`, payload);
+      const newReq = res.data.joinRequest || res.data.data || res.data;
+
+      // Safely ensure prev is an array before spreading
+      setJoinRequests((prev) =>
+        Array.isArray(prev) ? [newReq, ...prev] : [newReq],
+      );
+      return { success: true };
+    } catch (err) {
+      console.error("Error submitting join request:", err);
+      return {
+        success: false,
+        message: err.response?.data?.message || "Failed to submit request",
+      };
+    }
+  };
+
+  // 7. Update User Profile
+  const updateProfile = async (updatedProfile) => {
+    try {
+      const userId = currentUser?._id || currentUser?.id;
+
+      let payload;
+      if (updatedProfile instanceof FormData) {
+        payload = updatedProfile;
+        if (!payload.has("userId")) {
+          payload.append("userId", userId);
+        }
+      } else {
+        payload = {
+          userId,
+          ...updatedProfile,
+        };
+      }
+
+      const res = await axios.put(`${API_URL}/auth/profile`, payload);
+
+      const user = res.data.user || res.data;
+      setCurrentUser(user);
+      return { success: true, user };
+    } catch (err) {
+      console.error("Error updating profile:", err);
+      return {
+        success: false,
+        message: err.response?.data?.message || "Update failed",
+      };
+    }
+  };
+
+  // 8. Toggle Bookmark (Local State)
+  const toggleBookmark = (startupId) => {
+    setBookmarks((prev) =>
+      prev.includes(startupId)
+        ? prev.filter((id) => id !== startupId)
+        : [...prev, startupId],
+    );
   };
 
   return (
@@ -122,12 +183,14 @@ export function AppProvider({ children }) {
         bookmarks,
         joinRequests,
         startups,
+        loading,
         toggleBookmark,
         submitJoinRequest,
         updateProfile,
         login,
         register,
         logout,
+        fetchStartups,
         setJoinRequests,
       }}
     >
