@@ -18,17 +18,114 @@ import {
 import { SECTORS } from "../../constants/data.js";
 import "./BrowseStartups.css";
 
+/* =========================================================
+   FILTER SIDEBAR COMPONENT
+   IMPORTANT:
+   This is outside BrowseStartups so it does not get
+   recreated every time search/location state changes.
+========================================================= */
+
+function FilterSidebarContent({
+  handleClearFilters,
+  search,
+  setSearch,
+  selectedSectors,
+  handleSectorToggle,
+  allSkills,
+  selectedSkills,
+  handleSkillToggle,
+  selectedStage,
+  setSelectedStage,
+  locationQuery,
+  setLocationQuery,
+}) {
+  return (
+    <div className="space-y-6 text-left">
+      {/* Filter Header */}
+      <div>
+        <h3 className="font-bold text-gray-900 text-sm font-mono uppercase tracking-widest">
+          Filter Matrix
+        </h3>
+
+        <button
+          onClick={handleClearFilters}
+          className="text-xs text-gray-400 hover:text-black font-semibold transition-colors cursor-pointer"
+        >
+          Reset Filters
+        </button>
+      </div>
+
+      {/* =====================================================
+          Keywords Search
+      ===================================================== */}
+      <div className="space-y-2">
+        <label className="text-xs font-bold text-gray-700 uppercase tracking-wider font-mono">
+          Search Keyword
+        </label>
+
+        <div className="relative">
+          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
+
+          <input
+            type="text"
+            placeholder="AI, blockchain, ledger..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-gray-200 focus:border-black focus:ring-1 focus:ring-black outline-hidden text-xs transition-colors bg-gray-50/50"
+          />
+        </div>
+      </div>
+
+      {/* =====================================================
+          Sector Categories
+      ===================================================== */}
+      <div className="space-y-2.5">
+        <label className="text-xs font-bold text-gray-700 uppercase tracking-wider font-mono">
+          Sectors
+        </label>
+
+        <div className="space-y-2">
+          {SECTORS.map((sec) => (
+            <label
+              key={sec.id}
+              className="flex items-center gap-2.5 text-xs text-gray-600 font-medium select-none cursor-pointer hover:text-black"
+            >
+              <input
+                type="radio"
+                name="sector"
+                value={sec.name}
+                checked={selectedSectors.includes(sec.name)}
+                onChange={() => handleSectorToggle(sec.name)}
+                className="h-4 w-4 border-gray-300 text-black focus:ring-black"
+              />
+
+              <span>{sec.name}</span>
+            </label>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* =========================================================
+   MAIN COMPONENT
+========================================================= */
+
 export default function BrowseStartups() {
   const {
     startups = [],
     bookmarks = [],
     toggleBookmark,
     loading,
-    submitJoinRequest, // Changed from sendPitch to match AppContext
+    submitJoinRequest,
     joinRequests = [],
   } = useApp();
 
-  // Filter States
+  /* =======================================================
+     Filter States
+  ======================================================= */
+
   const [search, setSearch] = useState("");
   const [selectedSectors, setSelectedSectors] = useState([]);
   const [selectedSkills, setSelectedSkills] = useState([]);
@@ -38,58 +135,87 @@ export default function BrowseStartups() {
   const [visibleCount, setVisibleCount] = useState(4);
   const [pitchingId, setPitchingId] = useState(null);
 
-  // Modal States for Send Pitch Flow
+  /* =======================================================
+     Modal States
+  ======================================================= */
+
   const [activeModalStartup, setActiveModalStartup] = useState(null);
   const [roleRequested, setRoleRequested] = useState("");
   const [pitchMessage, setPitchMessage] = useState("");
 
-  // Safely ensure startups is always treated as an array regardless of API payload format
+  /* =======================================================
+     Safely Ensure Startups Is An Array
+  ======================================================= */
+
   const startupList = useMemo(() => {
     if (Array.isArray(startups)) return startups;
-    if (Array.isArray(startups?.startups)) return startups.startups;
-    if (Array.isArray(startups?.data)) return startups.data;
+
+    if (Array.isArray(startups?.startups)) {
+      return startups.startups;
+    }
+
+    if (Array.isArray(startups?.data)) {
+      return startups.data;
+    }
+
     return [];
   }, [startups]);
 
-  // Safely ensure joinRequests is always an array
+  /* =======================================================
+     Safely Ensure Join Requests Is An Array
+  ======================================================= */
+
   const safeRequestsList = useMemo(() => {
     if (Array.isArray(joinRequests)) return joinRequests;
-    if (Array.isArray(joinRequests?.data)) return joinRequests.data;
+
+    if (Array.isArray(joinRequests?.data)) {
+      return joinRequests.data;
+    }
+
     return [];
   }, [joinRequests]);
 
-  // Standard skills list aggregated for filter pills
+  /* =======================================================
+     All Skills
+  ======================================================= */
+
   const allSkills = useMemo(() => {
     const list = new Set();
+
     startupList.forEach((s) => {
       if (Array.isArray(s.skills)) {
         s.skills.forEach((skill) => list.add(skill));
       }
     });
+
     return Array.from(list);
   }, [startupList]);
 
-  // Handle category checkboxes
+  /* =======================================================
+     Handle Sector Toggle
+  ======================================================= */
+
   const handleSectorToggle = (sectorName) => {
-    setSelectedSectors((prev) => {
-      if (prev.includes(sectorName)) {
-        return prev.filter((s) => s !== sectorName);
-      } else {
-        return [...prev, sectorName];
-      }
-    });
+    setSelectedSectors([sectorName]);
   };
 
-  // Handle skill tag selection
+  /* =======================================================
+     Handle Skill Toggle
+  ======================================================= */
+
   const handleSkillToggle = (skill) => {
     setSelectedSkills((prev) => {
       if (prev.includes(skill)) {
         return prev.filter((s) => s !== skill);
-      } else {
-        return [...prev, skill];
       }
+
+      return [...prev, skill];
     });
   };
+
+  /* =======================================================
+     Clear Filters
+  ======================================================= */
 
   const handleClearFilters = () => {
     setSearch("");
@@ -99,7 +225,10 @@ export default function BrowseStartups() {
     setLocationQuery("");
   };
 
-  // Check if a venture has already been pitched
+  /* =======================================================
+     Check If Pitch Was Already Sent
+  ======================================================= */
+
   const isPitchSent = (startupId) => {
     return safeRequestsList.some(
       (req) =>
@@ -109,26 +238,35 @@ export default function BrowseStartups() {
     );
   };
 
-  // Open modal when user clicks Send Pitch
+  /* =======================================================
+     Open Pitch Modal
+  ======================================================= */
+
   const handleOpenPitchModal = (startup) => {
     const startupId = startup._id || startup.id;
+
     if (isPitchSent(startupId)) return;
+
     setActiveModalStartup(startup);
     setRoleRequested("");
     setPitchMessage("");
   };
 
-  // Submit Pitch handler connecting to DB via AppContext
+  /* =======================================================
+     Submit Pitch
+  ======================================================= */
+
   const handleSubmitPitch = async (e) => {
     e.preventDefault();
+
     if (!activeModalStartup) return;
 
     const startupId = activeModalStartup._id || activeModalStartup.id;
 
     try {
       setPitchingId(startupId);
+
       if (submitJoinRequest) {
-        // Matches AppContext: submitJoinRequest(startupId, roleId, roleTitle, note)
         const result = await submitJoinRequest(
           startupId,
           "general_role",
@@ -141,48 +279,84 @@ export default function BrowseStartups() {
           return;
         }
       }
+
       setActiveModalStartup(null);
     } catch (err) {
       console.error("Failed to send pitch:", err);
+
       alert("An error occurred while sending your pitch.");
     } finally {
       setPitchingId(null);
     }
   };
 
-  // Main Filtering Logic
+  /* =======================================================
+     Main Filtering Logic
+  ======================================================= */
+
   const filteredStartups = useMemo(() => {
     return startupList.filter((startup) => {
       const startupName = startup.name || startup.startupName || "";
+
       const startupTagline = startup.tagline || "";
+
       const startupDesc = startup.description || "";
+
       const startupLocation = startup.location || "";
+
       const startupSkills = startup.skills || [];
+
       const startupCategory = startup.category?.name || startup.category || "";
 
-      // 1. Text Search
+      /* ---------------------------------------------------
+         1. Text Search
+      --------------------------------------------------- */
+
       const text = search.toLowerCase();
+
       const matchesSearch =
         !search ||
         startupName.toLowerCase().includes(text) ||
         startupTagline.toLowerCase().includes(text) ||
         startupDesc.toLowerCase().includes(text);
 
-      // 2. Sector / Category Matching
+      /* ---------------------------------------------------
+         2. Sector Matching
+      --------------------------------------------------- */
+
       const matchesSector =
         selectedSectors.length === 0 ||
-        selectedSectors.includes(startupCategory);
+        selectedSectors.some(
+          (sector) =>
+            sector.trim().toLowerCase() ===
+            String(startupCategory).trim().toLowerCase(),
+        );
 
-      // 3. Required Skills Matching
+      /* ---------------------------------------------------
+         3. Skills Matching
+      --------------------------------------------------- */
+
       const matchesSkills =
         selectedSkills.length === 0 ||
-        startupSkills.some((skill) => selectedSkills.includes(skill));
+        startupSkills.some((skill) =>
+          selectedSkills.some(
+            (selectedSkill) =>
+              String(selectedSkill).trim().toLowerCase() ===
+              String(skill).trim().toLowerCase(),
+          ),
+        );
 
-      // 4. Funding Stage Matching
+      /* ---------------------------------------------------
+         4. Funding Stage
+      --------------------------------------------------- */
+
       const matchesStage =
         selectedStage === "All" || startup.stage === selectedStage;
 
-      // 5. Location Matching
+      /* ---------------------------------------------------
+         5. Location
+      --------------------------------------------------- */
+
       const matchesLocation =
         !locationQuery ||
         startupLocation.toLowerCase().includes(locationQuery.toLowerCase());
@@ -204,161 +378,87 @@ export default function BrowseStartups() {
     locationQuery,
   ]);
 
+  /* =======================================================
+     Displayed Startups
+  ======================================================= */
+
   const displayedStartups = filteredStartups.slice(0, visibleCount);
+
+  /* =======================================================
+     Load More
+  ======================================================= */
 
   const handleLoadMore = () => {
     setVisibleCount((prev) => prev + 2);
   };
 
-  const FilterSidebarContent = () => (
-    <div className="space-y-6 text-left">
-      <div className="flex items-center justify-between pb-4 border-b border-gray-100">
-        <h3 className="font-bold text-gray-900 text-sm font-mono uppercase tracking-widest">
-          Filter Matrix
-        </h3>
-        <button
-          onClick={handleClearFilters}
-          className="text-xs text-gray-400 hover:text-black font-semibold transition-colors cursor-pointer"
-        >
-          Reset Filters
-        </button>
-      </div>
-
-      {/* Keywords Search */}
-      <div className="space-y-2">
-        <label className="text-xs font-bold text-gray-700 uppercase tracking-wider font-mono">
-          Search Keyword
-        </label>
-        <div className="relative">
-          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
-          <input
-            type="text"
-            placeholder="AI, blockchain, ledger..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-gray-200 focus:border-black focus:ring-1 focus:ring-black outline-hidden text-xs transition-colors bg-gray-50/50"
-          />
-        </div>
-      </div>
-
-      {/* Sector Categories checkboxes */}
-      <div className="space-y-2.5">
-        <label className="text-xs font-bold text-gray-700 uppercase tracking-wider font-mono">
-          Sectors
-        </label>
-        <div className="space-y-2">
-          {SECTORS.map((sec) => (
-            <label
-              key={sec.id}
-              className="flex items-center gap-2.5 text-xs text-gray-600 font-medium select-none cursor-pointer hover:text-black"
-            >
-              <input
-                type="checkbox"
-                checked={selectedSectors.includes(sec.name)}
-                onChange={() => handleSectorToggle(sec.name)}
-                className="h-4 w-4 rounded-xs border-gray-300 text-black focus:ring-black"
-              />
-              <span>{sec.name}</span>
-            </label>
-          ))}
-        </div>
-      </div>
-
-      {/* Required Skill Pills */}
-      <div className="space-y-2.5">
-        <label className="text-xs font-bold text-gray-700 uppercase tracking-wider font-mono">
-          Required Skills
-        </label>
-        <div className="flex flex-wrap gap-1.5">
-          {allSkills.map((skill) => {
-            const isSelected = selectedSkills.includes(skill);
-            return (
-              <button
-                key={skill}
-                type="button"
-                onClick={() => handleSkillToggle(skill)}
-                className={`px-2.5 py-1 rounded-full text-[10px] font-bold font-mono border transition-all duration-150 cursor-pointer ${
-                  isSelected
-                    ? "bg-black text-white border-black"
-                    : "bg-white text-gray-500 border-gray-200 hover:border-gray-400 hover:text-black"
-                }`}
-              >
-                {skill}
-              </button>
-            );
-          })}
-        </div>
-      </div>
-
-      {/* Funding Stage Dropdown */}
-      <div className="space-y-2">
-        <label className="text-xs font-bold text-gray-700 uppercase tracking-wider font-mono">
-          Funding Stage
-        </label>
-        <select
-          value={selectedStage}
-          onChange={(e) => setSelectedStage(e.target.value)}
-          className="w-full px-3 py-2.5 rounded-xl border border-gray-200 focus:border-black outline-hidden text-xs transition-colors bg-gray-50/50"
-        >
-          <option value="All">All Stages</option>
-          <option value="Pre-seed">Pre-seed</option>
-          <option value="Seed">Seed</option>
-          <option value="Series A">Series A</option>
-        </select>
-      </div>
-
-      {/* Location Filter */}
-      <div className="space-y-2">
-        <label className="text-xs font-bold text-gray-700 uppercase tracking-wider font-mono">
-          Headquarters Location
-        </label>
-        <div className="relative">
-          <MapPin className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
-          <input
-            type="text"
-            placeholder="San Francisco, Austin..."
-            value={locationQuery}
-            onChange={(e) => setLocationQuery(e.target.value)}
-            className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-gray-200 focus:border-black focus:ring-1 focus:ring-black outline-hidden text-xs transition-colors bg-gray-50/50"
-          />
-        </div>
-      </div>
-    </div>
-  );
+  /* =======================================================
+     RETURN
+  ======================================================= */
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12 min-h-screen">
-      {/* Page Header */}
+      {/* ===================================================
+          Page Header
+      =================================================== */}
+
       <div className="text-left space-y-4 mb-10 pb-8 border-b border-gray-100">
         <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-gray-100 rounded-full text-[10px] font-bold uppercase tracking-widest text-gray-600">
           <Target className="w-3 h-3 text-indigo-500" />
+
           <span>Ecosystem Directory</span>
         </div>
+
         <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight text-gray-900">
           Browse Active Ventures
         </h1>
+
         <p className="text-gray-500 text-sm max-w-xl leading-relaxed">
           Search open co-founding contracts by structural segment, coding
           capability requirements, funding stages, or physical parameters.
         </p>
       </div>
 
-      {/* Main Grid */}
+      {/* ===================================================
+          Main Grid
+      =================================================== */}
+
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-        {/* Desktop Filter Sidebar */}
+        {/* =================================================
+            Desktop Filter Sidebar
+        ================================================= */}
+
         <aside className="hidden lg:block lg:col-span-3 bg-white border border-gray-100 p-6 rounded-2xl sticky top-24 shadow-xs">
-          <FilterSidebarContent />
+          <FilterSidebarContent
+            handleClearFilters={handleClearFilters}
+            search={search}
+            setSearch={setSearch}
+            selectedSectors={selectedSectors}
+            handleSectorToggle={handleSectorToggle}
+            allSkills={allSkills}
+            selectedSkills={selectedSkills}
+            handleSkillToggle={handleSkillToggle}
+            selectedStage={selectedStage}
+            setSelectedStage={setSelectedStage}
+            locationQuery={locationQuery}
+            setLocationQuery={setLocationQuery}
+          />
         </aside>
 
-        {/* Dynamic Listings Box */}
+        {/* =================================================
+            Dynamic Listings
+        ================================================= */}
+
         <main className="lg:col-span-9 space-y-6">
           {/* Controls Bar */}
+
           <div className="flex items-center justify-between bg-white border border-gray-100 p-4 rounded-2xl shadow-xs">
             <span className="text-xs font-semibold text-gray-500 font-mono">
               Found {filteredStartups.length} matching ventures
             </span>
 
             {/* Mobile Filter Trigger */}
+
             <button
               onClick={() => setShowMobileFilters(true)}
               className="lg:hidden flex items-center gap-2 px-3.5 py-2 border border-gray-200 hover:border-black rounded-xl text-xs font-semibold text-gray-700 transition-colors cursor-pointer"
@@ -368,29 +468,39 @@ export default function BrowseStartups() {
             </button>
           </div>
 
-          {/* Loading Spinner */}
+          {/* =================================================
+              Loading Spinner
+          ================================================= */}
+
           {loading && (
             <div className="bg-gray-50 border border-gray-100 p-12 rounded-3xl text-center space-y-4 max-w-md mx-auto flex flex-col items-center justify-center">
               <Loader2 className="w-8 h-8 text-black animate-spin" />
+
               <p className="text-xs font-mono text-gray-500">
                 Fetching active listings from backend...
               </p>
             </div>
           )}
 
-          {/* Empty State */}
+          {/* =================================================
+              Empty State
+          ================================================= */}
+
           {!loading && filteredStartups.length === 0 && (
             <div className="bg-gray-50 border border-gray-100 p-12 rounded-3xl text-center space-y-4 max-w-md mx-auto">
               <div className="p-4 bg-gray-100 rounded-full inline-block">
                 <AlertCircle className="w-8 h-8 text-gray-400" />
               </div>
+
               <h4 className="font-bold text-gray-900 text-lg">
                 No Ventures Match Filters
               </h4>
+
               <p className="text-xs text-gray-500 leading-relaxed">
                 We couldn't find any startups matching your criteria. Try
                 loosening your sector, skills selection, or location filters.
               </p>
+
               <button
                 onClick={handleClearFilters}
                 className="bg-black text-white px-5 py-2.5 rounded-full text-xs font-bold shadow-xs hover:bg-gray-900 transition-all cursor-pointer"
@@ -400,15 +510,23 @@ export default function BrowseStartups() {
             </div>
           )}
 
-          {/* Startups List */}
+          {/* =================================================
+              Startups List
+          ================================================= */}
+
           {!loading && (
             <div className="space-y-4">
               {displayedStartups.map((startup) => {
                 const startupId = startup._id || startup.id;
+
                 const isBookmarked = bookmarks.includes(startupId);
+
                 const hasPitched = isPitchSent(startupId);
+
                 const isCurrentlyPitching = pitchingId === startupId;
+
                 const skills = startup.skills || [];
+
                 const startupCategory =
                   startup.category?.name || startup.category || "";
 
@@ -423,15 +541,18 @@ export default function BrowseStartups() {
                     <div className="flex items-start gap-5 flex-1">
                       <div className="space-y-2 flex-1">
                         {/* Name and Badges */}
+
                         <div className="flex flex-wrap items-center gap-2">
                           <h3 className="font-extrabold text-gray-900 text-lg leading-snug group-hover:text-indigo-600 transition-colors">
                             {startup.name || startup.startupName}
                           </h3>
+
                           {startup.stage && (
                             <span className="bg-indigo-50 text-indigo-700 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider font-mono">
                               {startup.stage}
                             </span>
                           )}
+
                           {startupCategory && (
                             <span className="bg-gray-50 text-gray-500 text-[10px] font-bold px-2.5 py-0.5 rounded-full uppercase tracking-wider font-mono">
                               {startupCategory}
@@ -440,16 +561,19 @@ export default function BrowseStartups() {
                         </div>
 
                         {/* Tagline */}
+
                         <p className="text-xs text-gray-400 font-mono font-medium line-clamp-1">
                           {startup.tagline}
                         </p>
 
-                        {/* Description snippet */}
+                        {/* Description */}
+
                         <p className="text-xs text-gray-500 leading-relaxed line-clamp-2 max-w-2xl">
                           {startup.description}
                         </p>
 
-                        {/* Skills Tags pills */}
+                        {/* Skills */}
+
                         <div className="flex flex-wrap gap-1.5 pt-2">
                           {skills.slice(0, 4).map((skill) => (
                             <span
@@ -459,6 +583,7 @@ export default function BrowseStartups() {
                               {skill}
                             </span>
                           ))}
+
                           {skills.length > 4 && (
                             <span className="px-2 py-0.5 bg-indigo-50/50 text-[9px] font-bold font-mono rounded-md text-indigo-500 uppercase">
                               +{skills.length - 4} more
@@ -468,15 +593,20 @@ export default function BrowseStartups() {
                       </div>
                     </div>
 
-                    {/* Actions column */}
+                    {/* =================================================
+                        Actions Column
+                    ================================================= */}
+
                     <div className="flex sm:flex-row md:flex-col items-center md:items-end gap-3 w-full md:w-auto shrink-0 border-t border-gray-50 md:border-0 pt-4 md:pt-0">
                       <div className="flex items-center gap-1 text-xs text-gray-400 font-medium font-mono mb-0.5">
                         <MapPin className="w-3.5 h-3.5" />
+
                         <span>{startup.location || "Remote"}</span>
                       </div>
 
                       <div className="flex items-center gap-2.5 w-full sm:w-auto">
-                        {/* Send Pitch / Pitch Sent Button */}
+                        {/* Send Pitch */}
+
                         <button
                           type="button"
                           onClick={() => handleOpenPitchModal(startup)}
@@ -505,6 +635,8 @@ export default function BrowseStartups() {
                           )}
                         </button>
 
+                        {/* View */}
+
                         <Link
                           to={`/startup/${startupId}`}
                           className="bg-gray-50 hover:bg-black hover:text-white px-4 py-3 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 group/btn text-gray-700 border border-gray-100"
@@ -520,7 +652,10 @@ export default function BrowseStartups() {
             </div>
           )}
 
-          {/* Pagination Load More */}
+          {/* =================================================
+              Load More
+          ================================================= */}
+
           {!loading && filteredStartups.length > visibleCount && (
             <motion.div
               initial={{ opacity: 0 }}
@@ -538,7 +673,10 @@ export default function BrowseStartups() {
         </main>
       </div>
 
-      {/* Send Pitch Form Modal Popup */}
+      {/* =====================================================
+          Send Pitch Modal
+      ===================================================== */}
+
       <AnimatePresence>
         {activeModalStartup && (
           <div className="fixed inset-0 bg-black/40 backdrop-blur-xs flex items-center justify-center z-50 p-4">
@@ -548,6 +686,8 @@ export default function BrowseStartups() {
               exit={{ opacity: 0, scale: 0.95 }}
               className="bg-white border border-gray-100 rounded-3xl max-w-md w-full p-6 shadow-2xl space-y-4 relative text-left"
             >
+              {/* Close Button */}
+
               <button
                 onClick={() => setActiveModalStartup(null)}
                 className="absolute top-5 right-5 text-gray-400 hover:text-gray-900 p-1 cursor-pointer"
@@ -559,15 +699,19 @@ export default function BrowseStartups() {
                 Pitch to{" "}
                 {activeModalStartup.name || activeModalStartup.startupName}
               </h3>
+
               <p className="text-xs text-gray-500">
                 Specify your desired role and introduce yourself to the founder.
               </p>
 
               <form onSubmit={handleSubmitPitch} className="space-y-3">
+                {/* Role */}
+
                 <div>
                   <label className="block text-xs font-bold text-gray-700 mb-1">
                     Role You Are Requesting
                   </label>
+
                   <input
                     type="text"
                     required
@@ -578,10 +722,13 @@ export default function BrowseStartups() {
                   />
                 </div>
 
+                {/* Message */}
+
                 <div>
                   <label className="block text-xs font-bold text-gray-700 mb-1">
                     Introduction Message
                   </label>
+
                   <textarea
                     rows="4"
                     required
@@ -592,6 +739,8 @@ export default function BrowseStartups() {
                   />
                 </div>
 
+                {/* Buttons */}
+
                 <div className="pt-2 flex gap-2">
                   <button
                     type="button"
@@ -600,6 +749,7 @@ export default function BrowseStartups() {
                   >
                     Cancel
                   </button>
+
                   <button
                     type="submit"
                     className="flex-1 py-2.5 rounded-xl bg-black hover:bg-gray-800 text-white text-xs font-bold cursor-pointer"
@@ -613,11 +763,15 @@ export default function BrowseStartups() {
         )}
       </AnimatePresence>
 
-      {/* Mobile Drawer Slide for filters */}
+      {/* =====================================================
+          Mobile Filter Drawer
+      ===================================================== */}
+
       <AnimatePresence>
         {showMobileFilters && (
           <>
             {/* Backdrop */}
+
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 0.4 }}
@@ -627,11 +781,16 @@ export default function BrowseStartups() {
             />
 
             {/* Panel */}
+
             <motion.div
               initial={{ y: "100%" }}
               animate={{ y: 0 }}
               exit={{ y: "100%" }}
-              transition={{ type: "spring", damping: 25, stiffness: 220 }}
+              transition={{
+                type: "spring",
+                damping: 25,
+                stiffness: 220,
+              }}
               className="fixed inset-x-0 bottom-0 max-h-[85vh] overflow-y-auto bg-white rounded-t-[2rem] z-50 p-6 shadow-2xl lg:hidden flex flex-col justify-between"
             >
               <div>
@@ -640,6 +799,7 @@ export default function BrowseStartups() {
                     <SlidersHorizontal className="w-4 h-4 text-indigo-500" />
                     Filter Matrix
                   </h3>
+
                   <button
                     onClick={() => setShowMobileFilters(false)}
                     className="p-1.5 bg-gray-100 hover:bg-gray-200 rounded-full cursor-pointer"
@@ -649,9 +809,24 @@ export default function BrowseStartups() {
                 </div>
 
                 <div className="mb-6">
-                  <FilterSidebarContent />
+                  <FilterSidebarContent
+                    handleClearFilters={handleClearFilters}
+                    search={search}
+                    setSearch={setSearch}
+                    selectedSectors={selectedSectors}
+                    handleSectorToggle={handleSectorToggle}
+                    allSkills={allSkills}
+                    selectedSkills={selectedSkills}
+                    handleSkillToggle={handleSkillToggle}
+                    selectedStage={selectedStage}
+                    setSelectedStage={setSelectedStage}
+                    locationQuery={locationQuery}
+                    setLocationQuery={setLocationQuery}
+                  />
                 </div>
               </div>
+
+              {/* Mobile Buttons */}
 
               <div className="border-t border-gray-100 pt-4 flex gap-3">
                 <button
@@ -663,6 +838,7 @@ export default function BrowseStartups() {
                 >
                   Clear All
                 </button>
+
                 <button
                   onClick={() => setShowMobileFilters(false)}
                   className="flex-1 py-3 bg-black text-white rounded-xl font-semibold text-xs cursor-pointer"

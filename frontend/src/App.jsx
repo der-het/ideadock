@@ -16,8 +16,11 @@ import Footer from "./components/layout/Footer.jsx";
 
 // Public Pages
 import Landing from "./pages/Landing/Landing.jsx";
+
+import About from "./pages/About/About.jsx";
 import Login from "./pages/Login/Login.jsx";
 import Register from "./pages/Register/Register.jsx";
+
 import Dashboard from "./pages/Dashboard/Dashboard.jsx";
 import BrowseStartups from "./pages/BrowseStartups/BrowseStartups.jsx";
 import StartupDetails from "./pages/StartupDetails/StartupDetails.jsx";
@@ -34,14 +37,17 @@ import ManageJoinRequests from "./pages/Admin/ManageJoinRequests/ManageJoinReque
 import Reports from "./pages/Admin/Reports/Reports.jsx";
 
 // Admin Route Guard Component
+// Admin Route Guard Component
 function AdminRoute() {
   const { currentUser, user } = useApp();
   const activeUser = currentUser || user;
 
+  // If user is not logged in OR is not an admin
   if (!activeUser || activeUser.role !== "admin") {
-    return <Navigate to="/login" replace />;
+    return <Navigate to="/" replace />;
   }
 
+  // Only admin can access admin routes
   return <Outlet />;
 }
 
@@ -89,6 +95,7 @@ export default function App() {
           <Routes>
             {/* Public Routes */}
             <Route path="/" element={<Landing />} />
+            <Route path="/about" element={<About />} />
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
             <Route path="/dashboard" element={<Dashboard />} />

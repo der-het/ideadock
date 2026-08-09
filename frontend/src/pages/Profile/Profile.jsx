@@ -260,36 +260,6 @@ export default function Profile() {
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
         {/* Main tabs view */}
         <div className="lg:col-span-8 space-y-6">
-          {/* Tab buttons */}
-          <div className="flex border-b border-gray-100 overflow-x-auto gap-2">
-            {[
-              {
-                id: "overview",
-                label: "Overview",
-                icon: <FileText className="w-4 h-4" />,
-              },
-              {
-                id: "bookmarks",
-                label: "Bookmarks",
-                icon: <Bookmark className="w-4 h-4" />,
-              },
-            ].map((tab) => (
-              <button
-                key={tab.id}
-                type="button"
-                onClick={() => setActiveTab(tab.id)}
-                className={`flex items-center gap-2 px-5 py-3 text-xs font-bold tracking-tight border-b-2 transition-all shrink-0 cursor-pointer ${
-                  activeTab === tab.id
-                    ? "border-black text-black font-extrabold"
-                    : "border-transparent text-gray-400 hover:text-black hover:border-gray-200"
-                }`}
-              >
-                {tab.icon}
-                {tab.label}
-              </button>
-            ))}
-          </div>
-
           {/* Active Tab Content */}
           <div className="pt-2">
             {activeTab === "overview" && (

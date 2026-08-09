@@ -129,12 +129,6 @@ export default function Login() {
                 <label className="text-xs font-bold text-gray-700 uppercase tracking-wider font-mono">
                   Password
                 </label>
-                <a
-                  href="#"
-                  className="text-xs text-gray-400 hover:text-black transition-colors"
-                >
-                  Forgot?
-                </a>
               </div>
               <div className="relative">
                 <input
@@ -198,57 +192,6 @@ export default function Login() {
               )}
             </button>
           </form>
-
-          {/* Social login block */}
-          <div className="space-y-4">
-            <div className="relative flex py-2 items-center">
-              <div className="flex-grow border-t border-gray-100"></div>
-              <span className="flex-shrink mx-4 text-xs font-mono font-bold uppercase tracking-widest text-gray-400">
-                or enter with
-              </span>
-              <div className="flex-grow border-t border-gray-100"></div>
-            </div>
-
-            <div className="grid grid-cols-2 gap-3">
-              <button
-                type="button"
-                onClick={() => handleSocialLogin("Google")}
-                disabled={isSubmitting}
-                className="border border-gray-200 hover:border-black py-2.5 rounded-xl text-xs font-semibold text-gray-700 hover:text-black transition-colors flex items-center justify-center gap-2 cursor-pointer bg-white disabled:opacity-50"
-              >
-                <svg className="w-4 h-4" viewBox="0 0 24 24">
-                  <path
-                    fill="#4285F4"
-                    d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v3.92h6.61c-.29 1.5-.14 2.1-.14 2.1l3.22 2.5s.4-2.8.4-6.45z"
-                  />
-                  <path
-                    fill="#34A853"
-                    d="M12 24c3.24 0 5.97-1.08 7.96-2.91l-3.22-2.5c-.9.6-2.05.96-3.74.96-3.23 0-5.96-2.18-6.94-5.11L.82 17.51C2.8 21.43 6.88 24 12 24z"
-                  />
-                  <path
-                    fill="#FBBC05"
-                    d="M5.06 14.44c-.25-.75-.39-1.56-.39-2.44s.14-1.69.39-2.44L.82 7.05C0 8.71 0 10.51 0 12s0 3.29.82 4.95l4.24-2.51z"
-                  />
-                  <path
-                    fill="#EA4335"
-                    d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 6.88 0 2.8 2.57.82 6.49l4.24 3.29C6.04 6.93 8.77 4.75 12 4.75z"
-                  />
-                </svg>
-                Google
-              </button>
-              <button
-                type="button"
-                onClick={() => handleSocialLogin("GitHub")}
-                disabled={isSubmitting}
-                className="border border-gray-200 hover:border-black py-2.5 rounded-xl text-xs font-semibold text-gray-700 hover:text-black transition-colors flex items-center justify-center gap-2 cursor-pointer bg-white disabled:opacity-50"
-              >
-                <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24">
-                  <path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12" />
-                </svg>
-                GitHub
-              </button>
-            </div>
-          </div>
 
           <p className="text-xs text-gray-500 text-center">
             New to the ecosystem?{" "}

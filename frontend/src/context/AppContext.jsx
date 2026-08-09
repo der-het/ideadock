@@ -7,31 +7,31 @@ const API_URL = "http://localhost:5000/api";
 const AppContext = createContext();
 
 export function AppProvider({ children }) {
-  // Load initial user state from localStorage
+  // Load initial user state from sessionStorage
   const [currentUser, setCurrentUser] = useState(() => {
-    const saved = localStorage.getItem("sc_user");
+    const saved = sessionStorage.getItem("sc_user");
     return saved ? JSON.parse(saved) : null;
   });
 
   const [startups, setStartups] = useState([]);
   const [joinRequests, setJoinRequests] = useState([]);
   const [bookmarks, setBookmarks] = useState(() => {
-    const saved = localStorage.getItem("sc_bookmarks");
+    const saved = sessionStorage.getItem("sc_bookmarks");
     return saved ? JSON.parse(saved) : [];
   });
   const [loading, setLoading] = useState(false);
 
-  // Sync user and bookmarks with localStorage
+  // Sync user and bookmarks with sessionStorage
   useEffect(() => {
     if (currentUser) {
-      localStorage.setItem("sc_user", JSON.stringify(currentUser));
+      sessionStorage.setItem("sc_user", JSON.stringify(currentUser));
     } else {
-      localStorage.removeItem("sc_user");
+      sessionStorage.removeItem("sc_user");
     }
   }, [currentUser]);
 
   useEffect(() => {
-    localStorage.setItem("sc_bookmarks", JSON.stringify(bookmarks));
+    sessionStorage.setItem("sc_bookmarks", JSON.stringify(bookmarks));
   }, [bookmarks]);
 
   // Fetch Startups from API on Mount
@@ -103,11 +103,11 @@ export function AppProvider({ children }) {
   const logout = () => {
     setCurrentUser(null);
     setJoinRequests([]);
-    localStorage.removeItem("sc_user");
+    sessionStorage.removeItem("sc_user");
+    sessionStorage.removeItem("sc_bookmarks");
+    sessionStorage.clear();
   };
 
-  // 6. Submit Join Request
-  // 6. Submit Join Request
   // 6. Submit Join Request
   const submitJoinRequest = async (startupId, roleId, roleTitle, note = "") => {
     try {
@@ -167,7 +167,7 @@ export function AppProvider({ children }) {
     }
   };
 
-  // 8. Toggle Bookmark (Local State)
+  // 8. Toggle Bookmark (Session State)
   const toggleBookmark = (startupId) => {
     setBookmarks((prev) =>
       prev.includes(startupId)

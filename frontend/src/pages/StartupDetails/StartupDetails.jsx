@@ -189,7 +189,7 @@ export default function StartupDetails() {
 
         {/* Action Button */}
         <div className="flex items-center gap-3 w-full md:w-auto border-t border-gray-50 md:border-0 pt-4 md:pt-0">
-          <button
+          {/* <button
             onClick={() =>
               handleOpenJoinModal(
                 roles[0] || {
@@ -217,7 +217,7 @@ export default function StartupDetails() {
                 Join Venture
               </>
             )}
-          </button>
+          </button> */}
         </div>
       </div>
 

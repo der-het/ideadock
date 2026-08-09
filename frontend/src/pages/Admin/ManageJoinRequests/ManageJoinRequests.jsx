@@ -164,13 +164,12 @@ export default function ManageJoinRequests() {
     {
       title: "TOTAL REQUEST",
       value: totalRequestsCount.toLocaleString(),
-      trend: "+12%",
       type: "error",
     },
     {
       title: "APPROVED REQUEST",
       value: approvedRequestsCount.toLocaleString(),
-      trend: "Stable",
+
       type: "success",
     },
   ];
@@ -208,25 +207,17 @@ export default function ManageJoinRequests() {
             className="request-stat-card bg-white border border-gray-100 p-5 rounded-2xl shadow-2xs flex justify-between items-center"
             key={idx}
           >
-            <div>
+            <div className="flex flex-col items-center justify-center text-center w-full">
               <span className="request-stat-title text-[10px] font-mono font-bold text-gray-400 uppercase tracking-widest">
                 {stat.title}
               </span>
+
               <div className="request-stat-row mt-0.5">
                 <span className="request-stat-value text-2xl font-black text-gray-900 font-mono">
                   {stat.value}
                 </span>
               </div>
             </div>
-            <span
-              className={`request-stat-trend-chip text-[10px] font-bold font-mono px-2 py-0.5 rounded-md border ${
-                stat.type === "success"
-                  ? "text-emerald-700 bg-emerald-50 border-emerald-200"
-                  : "text-rose-700 bg-rose-50 border-rose-200"
-              }`}
-            >
-              {stat.trend}
-            </span>
           </div>
         ))}
       </div>

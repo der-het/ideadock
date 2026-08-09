@@ -75,6 +75,17 @@ export default function Navbar() {
               <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
               Admin Console Mode
             </span>
+          ) : isAdmin ? (
+            /* Admin User Links */
+            <>
+              <Link
+                to="/admin"
+                className="px-4 py-2 rounded-xl text-xs font-extrabold transition-all flex items-center gap-1.5 bg-amber-50 text-amber-700 hover:bg-amber-100 border border-amber-200"
+              >
+                <ShieldCheck className="w-3.5 h-3.5" />
+                Admin Panel
+              </Link>
+            </>
           ) : (
             /* Standard Logged In User Links */
             <>
@@ -88,6 +99,7 @@ export default function Navbar() {
               >
                 Browse Ventures
               </Link>
+
               <Link
                 to="/dashboard"
                 className={`px-4 py-2 rounded-xl text-xs font-bold transition-all ${
@@ -98,26 +110,17 @@ export default function Navbar() {
               >
                 Dashboard
               </Link>
+
               <Link
                 to="/profile"
                 className={`px-4 py-2 rounded-xl text-xs font-bold transition-all ${
-                  isActive("/profile")
+                  isActive("/deshboard")
                     ? "bg-gray-100 text-black font-extrabold"
                     : "text-gray-500 hover:text-black hover:bg-gray-50"
                 }`}
               >
                 My Profile
               </Link>
-
-              {isAdmin && (
-                <Link
-                  to="/admin"
-                  className="px-4 py-2 rounded-xl text-xs font-extrabold transition-all flex items-center gap-1.5 bg-amber-50 text-amber-700 hover:bg-amber-100 border border-amber-200"
-                >
-                  <ShieldCheck className="w-3.5 h-3.5" />
-                  Admin Panel
-                </Link>
-              )}
             </>
           )}
         </nav>
@@ -126,7 +129,16 @@ export default function Navbar() {
         <div className="flex items-center gap-3">
           {activeUser ? (
             <div className="flex items-center gap-3 pl-3 border-l border-gray-200">
-              <div className="flex items-center gap-2.5">
+              <div
+                className={`flex items-center gap-2.5 ${
+                  !isAdmin ? "cursor-pointer" : ""
+                }`}
+                onClick={() => {
+                  if (!isAdmin) {
+                    navigate("/profile");
+                  }
+                }}
+              >
                 <img
                   src={avatarUrl}
                   alt={userName}
