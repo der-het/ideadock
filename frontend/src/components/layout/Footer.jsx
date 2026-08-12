@@ -17,12 +17,17 @@ export default function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-12">
           {/* Brand block */}
           <div className="md:col-span-2">
-            <Link to="/" className="flex items-center gap-2 mb-4 group">
-              <div className="bg-black text-white p-1.5 rounded-lg">
-                <Brain className="w-4 h-4" />
+            <Link className="flex items-center gap-2.5">
+              <div className="w-9 h-9 rounded-full overflow-hidden flex items-center justify-center">
+                <img
+                  src="../../../public/logo.svg"
+                  alt="IDEADOCK Logo"
+                  className="w-full h-full object-contain"
+                />
               </div>
-              <span className="text-base font-extrabold tracking-tight text-gray-900">
-                StartupConnect
+
+              <span className="font-extrabold text-lg text-gray-900 tracking-tight">
+                IDEADOCK
               </span>
             </Link>
             <p className="text-gray-500 text-sm max-w-sm mb-6 leading-relaxed">

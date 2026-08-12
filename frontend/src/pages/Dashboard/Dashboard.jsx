@@ -8,6 +8,8 @@ import {
   Send,
   Inbox,
   MessageCircle,
+  Radar,
+  ArrowUpRight,
 } from "lucide-react";
 import axios from "axios";
 import "./Dashboard.css";
@@ -16,44 +18,134 @@ const API_URL = "http://localhost:5000/api";
 
 export default function Dashboard() {
   const navigate = useNavigate();
+
   const { currentUser, user, bookmarks = [], startups = [] } = useApp();
 
-  // Active user reference
+  // =====================================================
+  // ACTIVE USER
+  // =====================================================
+
   const activeUser = currentUser || user;
   const userId = activeUser?._id || activeUser?.id;
 
-  // Local user requests state to guarantee direct fetching
+  // =====================================================
+  // USER REQUESTS
+  // Keep the old working backend connection
+  // =====================================================
+
   const [userRequests, setUserRequests] = useState([]);
 
-  // Auto-redirect admin users immediately to the Admin Panel
+  // =====================================================
+  // STARTUPS FOR RADAR
+  // =====================================================
+
+  const [radarStartups, setRadarStartups] = useState([]);
+  const [radarLoading, setRadarLoading] = useState(true);
+
+  // =====================================================
+  // ADMIN REDIRECT
+  // =====================================================
+
   useEffect(() => {
     if (activeUser?.role === "admin") {
-      navigate("/admin/startups", { replace: true });
+      navigate("/admin/startups", {
+        replace: true,
+      });
     }
   }, [activeUser, navigate]);
 
-  // Fetch user requests directly on mount
+  // =====================================================
+  // FETCH USER REQUESTS
+  // OLD BACKEND CONNECTION PRESERVED
+  // =====================================================
+
   useEffect(() => {
-    if (userId) {
-      axios
-        .get(`${API_URL}/requests/user/${userId}`)
-        .then((res) => {
-          const reqs = res.data.requests || res.data.data || res.data;
-          setUserRequests(Array.isArray(reqs) ? reqs : []);
-        })
-        .catch((err) => console.error("Error fetching user requests:", err));
-    }
+    if (!userId) return;
+
+    const fetchUserRequests = async () => {
+      try {
+        const res = await axios.get(`${API_URL}/requests/user/${userId}`);
+
+        const reqs = res.data.requests || res.data.data || res.data;
+
+        setUserRequests(Array.isArray(reqs) ? reqs : []);
+      } catch (err) {
+        console.error(
+          "Error fetching user requests:",
+          err.response?.data || err,
+        );
+
+        setUserRequests([]);
+      }
+    };
+
+    fetchUserRequests();
+
+    // Refresh request status periodically.
+    // This allows Approved / Rejected changes
+    // to appear without manually refreshing.
+    const interval = setInterval(fetchUserRequests, 5000);
+
+    return () => clearInterval(interval);
   }, [userId]);
 
-  // If not logged in, redirect to login
-  if (!activeUser) {
-    setTimeout(() => {
-      navigate("/login");
-    }, 0);
-    return null;
-  }
+  // =====================================================
+  // FETCH APPROVED STARTUPS FOR RADAR
+  // BACKEND:
+  // GET /api/startups
+  // =====================================================
 
-  // Recommended ideas matching user skills
+  useEffect(() => {
+    const fetchRadarStartups = async () => {
+      try {
+        setRadarLoading(true);
+
+        const res = await axios.get(`${API_URL}/startups`);
+
+        const data = res.data.startups || res.data.data || res.data;
+
+        if (Array.isArray(data)) {
+          setRadarStartups(data);
+        } else {
+          setRadarStartups([]);
+        }
+      } catch (err) {
+        console.error(
+          "Error fetching radar startups:",
+          err.response?.data || err,
+        );
+
+        setRadarStartups([]);
+      } finally {
+        setRadarLoading(false);
+      }
+    };
+
+    fetchRadarStartups();
+
+    // Keep radar synchronized with approved startups.
+    const interval = setInterval(fetchRadarStartups, 10000);
+
+    return () => clearInterval(interval);
+  }, []);
+
+  // =====================================================
+  // LOGIN CHECK
+  // =====================================================
+
+  useEffect(() => {
+    if (!activeUser) {
+      navigate("/login", {
+        replace: true,
+      });
+    }
+  }, [activeUser, navigate]);
+
+  // =====================================================
+  // RECOMMENDATIONS
+  // Existing data kept from old Dashboard
+  // =====================================================
+
   const recommendations = useMemo(() => {
     return [
       {
@@ -88,64 +180,280 @@ export default function Dashboard() {
 
   const userName = activeUser?.name || activeUser?.fullName || "Builder";
 
+  // =====================================================
+  // RADAR POSITIONS
+  // =====================================================
+
+  const radarPositions = [
+    {
+      top: "10%",
+      left: "50%",
+    },
+    {
+      top: "24%",
+      left: "77%",
+    },
+    {
+      top: "52%",
+      left: "88%",
+    },
+    {
+      top: "78%",
+      left: "73%",
+    },
+    {
+      top: "88%",
+      left: "50%",
+    },
+    {
+      top: "73%",
+      left: "23%",
+    },
+    {
+      top: "48%",
+      left: "12%",
+    },
+    {
+      top: "24%",
+      left: "25%",
+    },
+  ];
+
+  // =====================================================
+  // OPEN STARTUP
+  // =====================================================
+
+  const handleRadarStartupClick = (startup) => {
+    const startupId = startup?._id || startup?.id;
+
+    if (!startupId) return;
+
+    /*
+      Change this route ONLY if your existing
+      startup-details route uses another path.
+    */
+    navigate(`/startup/${startupId}`);
+  };
+
+  // =====================================================
+  // NOT LOGGED IN
+  // =====================================================
+
+  if (!activeUser) {
+    return null;
+  }
+
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12 min-h-screen text-left">
-      {/* Header greeting */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 pb-8 border-b border-gray-100 mb-8">
-        <div>
-          <p className="text-xs font-mono font-bold uppercase tracking-widest text-indigo-600">
-            Terminal Panel
-          </p>
-          <h1 className="text-3xl font-extrabold tracking-tight text-gray-900 mt-1">
-            Welcome back,{" "}
-            <span className="bg-gradient-to-r from-black via-indigo-950 to-gray-800 bg-clip-text text-transparent">
-              {userName.split(" ")[0]}
-            </span>
-          </h1>
-          <p className="text-gray-500 text-sm mt-0.5">
-            Your co-founder matching matrix is fully synchronized. Review
-            recommendations and pitch logs.
-          </p>
+    <div className="dashboard-page">
+      <div className="dashboard-container">
+        {/* =================================================
+            HEADER
+        ================================================= */}
+
+        <div className="dashboard-header">
+          <div>
+            <p className="dashboard-eyebrow">Terminal Panel</p>
+
+            <h1 className="dashboard-title">
+              Welcome back, <span>{userName.split(" ")[0]}</span>
+            </h1>
+
+            <p className="dashboard-subtitle">
+              Your co-founder matching matrix is fully synchronized. Review
+              recommendations and pitch logs.
+            </p>
+          </div>
+
+          <Link to="/profile" className="dashboard-profile-button">
+            <FileEdit className="w-4 h-4" />
+            Edit Identity Card
+          </Link>
         </div>
 
-        <Link
-          to="/profile"
-          className="bg-white border border-gray-200 hover:border-black font-semibold text-xs text-gray-700 hover:text-black px-4.5 py-2.5 rounded-xl transition-all flex items-center gap-2 shadow-2xs"
-        >
-          <FileEdit className="w-4 h-4 text-gray-400" />
-          Edit Identity Card
-        </Link>
-      </div>
+        {/* =================================================
+            VENTURE RADAR
+        ================================================= */}
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-        {/* Top-Left: Recommended Vectors (8 cols) */}
+        <section className="venture-radar-card">
+          <div className="venture-radar-header">
+            <div>
+              <div className="venture-radar-label">
+                <Radar className="w-4 h-4" />
+                Venture Radar
+              </div>
 
-        {/* Bottom Full Row: Active Pitch Logs Table (12 cols) */}
-        <div className="lg:col-span-12 mt-2">
-          <div className="bg-white border border-gray-100 p-6 rounded-2xl shadow-2xs space-y-4">
-            <div className="flex justify-between items-center">
-              <h3 className="text-xl font-extrabold text-gray-900">
-                Active Pitch Logs
-              </h3>
-              <span className="text-xs font-mono font-bold text-gray-400 uppercase">
-                {userRequests.length} Logged
-              </span>
+              <h2>Find your next orbit.</h2>
+
+              <p>Live approved ventures from the venture directory.</p>
             </div>
 
-            <div className="overflow-x-auto">
-              <table className="w-full text-left border-collapse">
+            <div className="venture-radar-counter">
+              <strong>{radarStartups.length}</strong>
+
+              <span>ventures</span>
+            </div>
+          </div>
+
+          {/* =================================================
+              RADAR
+          ================================================= */}
+
+          <div className="radar-stage">
+            {/* Orbit rings */}
+
+            <div className="radar-ring radar-ring-large" />
+
+            <div className="radar-ring radar-ring-small" />
+
+            {/* Cross */}
+
+            <div className="radar-cross radar-cross-horizontal" />
+
+            <div className="radar-cross radar-cross-vertical" />
+
+            {/* Decorative dots */}
+
+            <span className="radar-decoration radar-dot-one" />
+            <span className="radar-decoration radar-dot-two" />
+            <span className="radar-decoration radar-dot-three" />
+            <span className="radar-decoration radar-dot-four" />
+
+            {/* =================================================
+                USER
+            ================================================= */}
+
+            <div className="radar-user">
+              <div className="radar-user-pulse" />
+
+              <div className="radar-user-core">
+                {userName.charAt(0).toUpperCase()}
+              </div>
+
+              <span>YOU</span>
+            </div>
+
+            {/* =================================================
+                LOADING
+            ================================================= */}
+
+            {radarLoading && (
+              <div className="radar-center-message">Scanning ventures...</div>
+            )}
+
+            {/* =================================================
+                STARTUP NODES
+            ================================================= */}
+
+            {!radarLoading &&
+              radarStartups.slice(0, 8).map((startup, index) => {
+                const position = radarPositions[index];
+
+                if (!position) {
+                  return null;
+                }
+
+                const startupId = startup?._id || startup?.id || index;
+
+                const startupName =
+                  startup?.startupName || startup?.name || "Venture";
+
+                const category =
+                  startup?.category?.name || startup?.category || "Startup";
+
+                return (
+                  <button
+                    key={startupId}
+                    type="button"
+                    className="radar-node"
+                    style={{
+                      top: position.top,
+                      left: position.left,
+                    }}
+                    onClick={() => handleRadarStartupClick(startup)}
+                    aria-label={`Open ${startupName}`}
+                  >
+                    <span className="radar-node-pulse" />
+
+                    <span className="radar-node-core">
+                      {startupName.charAt(0).toUpperCase()}
+                    </span>
+
+                    <span className="radar-node-tooltip">
+                      <strong>{startupName}</strong>
+
+                      <small>{category}</small>
+
+                      <span>
+                        View venture
+                        <ArrowUpRight />
+                      </span>
+                    </span>
+                  </button>
+                );
+              })}
+
+            {/* =================================================
+                EMPTY
+            ================================================= */}
+
+            {!radarLoading && radarStartups.length === 0 && (
+              <div className="radar-empty">
+                <span>No approved ventures detected</span>
+
+                <Link to="/browse">Explore ventures →</Link>
+              </div>
+            )}
+          </div>
+
+          {/* =================================================
+              RADAR FOOTER
+          ================================================= */}
+
+          <div className="venture-radar-footer">
+            <div className="radar-legend">
+              <span className="legend-live-dot" />
+
+              <span>Live from venture directory</span>
+            </div>
+
+            <Link to="/browse" className="radar-explore-link">
+              Explore all ventures
+              <ArrowUpRight className="w-3.5 h-3.5" />
+            </Link>
+          </div>
+        </section>
+
+        {/* =================================================
+            ACTIVE PITCH LOGS
+        ================================================= */}
+
+        <div className="pitch-logs-section">
+          <div className="pitch-logs-card">
+            <div className="pitch-logs-header">
+              <h3>Active Pitch Logs</h3>
+
+              <span>{userRequests.length} Logged</span>
+            </div>
+
+            <div className="pitch-table-wrapper">
+              <table className="pitch-table">
                 <thead>
-                  <tr className="border-b border-gray-100 text-xs font-semibold text-gray-400 uppercase font-mono">
-                    <th className="py-3 px-2">Venture</th>
-                    <th className="py-3 px-2">Role Requested</th>
-                    <th className="py-3 px-2">Status</th>
-                    <th className="py-3 px-2 text-right">Action</th>
+                  <tr>
+                    <th>Venture</th>
+
+                    <th>Role Requested</th>
+
+                    <th>Status</th>
+
+                    <th className="text-right">Action</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-gray-50 text-sm text-gray-900 font-medium">
+
+                <tbody>
                   {userRequests && userRequests.length > 0 ? (
                     userRequests.map((request, index) => {
                       const status = request.status?.toLowerCase() || "pending";
+
                       const ventureName =
                         request.startup?.startupName ||
                         request.startup?.name ||
@@ -153,68 +461,69 @@ export default function Dashboard() {
                         "Venture Project";
 
                       const whatsappNumber = request.startup?.whatsappNumber;
+
                       const whatsappLink = whatsappNumber
-                        ? `https://wa.me/${whatsappNumber.replace(/[^0-9]/g, "")}`
+                        ? `https://wa.me/${whatsappNumber.replace(
+                            /[^0-9]/g,
+                            "",
+                          )}`
                         : null;
 
                       return (
-                        <tr
-                          key={request._id || request.id || index}
-                          className="hover:bg-gray-50/50 transition-colors"
-                        >
-                          {/* Venture Name */}
-                          <td className="py-4 px-2 font-bold text-gray-900">
-                            {ventureName}
-                          </td>
+                        <tr key={request._id || request.id || index}>
+                          {/* Venture */}
 
-                          {/* Role Requested */}
-                          <td className="py-4 px-2 text-gray-600 font-mono text-xs">
+                          <td className="venture-name-cell">{ventureName}</td>
+
+                          {/* Role */}
+
+                          <td className="role-cell">
                             {request.roleRequested || "General"}
                           </td>
 
-                          {/* Status Badge */}
-                          <td className="py-4 px-2">
+                          {/* Status */}
+
+                          <td>
                             {status === "approved" && (
-                              <span className="px-2.5 py-1 rounded-md text-xs font-bold font-mono bg-emerald-50 text-emerald-700 border border-emerald-200">
+                              <span className="status-badge status-approved">
                                 Approved
                               </span>
                             )}
+
                             {status === "rejected" && (
-                              <span className="px-2.5 py-1 rounded-md text-xs font-bold font-mono bg-rose-50 text-rose-700 border border-rose-200">
+                              <span className="status-badge status-rejected">
                                 Rejected
                               </span>
                             )}
+
                             {status === "pending" && (
-                              <span className="px-2.5 py-1 rounded-md text-xs font-bold font-mono bg-amber-50 text-amber-700 border border-amber-200">
+                              <span className="status-badge status-pending">
                                 Pending
                               </span>
                             )}
                           </td>
 
-                          {/* Action Column */}
-                          <td className="py-4 px-2 text-right">
+                          {/* Action */}
+
+                          <td className="action-cell">
                             {status === "approved" ? (
                               whatsappLink ? (
                                 <a
                                   href={whatsappLink}
                                   target="_blank"
                                   rel="noopener noreferrer"
-                                  className="inline-flex items-center gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold px-3.5 py-2 rounded-xl transition-colors cursor-pointer shadow-xs"
+                                  className="whatsapp-button"
                                 >
                                   <MessageCircle className="w-4 h-4" />
                                   Connect on WhatsApp
                                 </a>
                               ) : (
-                                <span className="text-xs font-semibold text-emerald-600">
-                                  Approved
-                                </span>
+                                <span className="approved-text">Approved</span>
                               )
                             ) : status === "rejected" ? (
-                              <span className="text-xs font-semibold text-gray-400">
-                                Closed
-                              </span>
+                              <span className="closed-text">Closed</span>
                             ) : (
-                              <span className="text-xs font-semibold text-amber-600">
+                              <span className="awaiting-text">
                                 Awaiting Review
                               </span>
                             )}
@@ -224,20 +533,18 @@ export default function Dashboard() {
                     })
                   ) : (
                     <tr>
-                      <td colSpan={4} className="py-12 text-center">
-                        <div className="max-w-xs mx-auto space-y-3">
-                          <Inbox className="w-8 h-8 text-gray-300 mx-auto" />
-                          <p className="text-sm font-bold text-gray-800">
-                            No pitch requests sent yet
-                          </p>
-                          <p className="text-xs text-gray-400">
+                      <td colSpan={4} className="empty-pitches">
+                        <div>
+                          <Inbox className="empty-icon" />
+
+                          <p>No pitch requests sent yet</p>
+
+                          <span>
                             Browse active venture opportunities and send your
                             first co-founder pitch.
-                          </p>
-                          <Link
-                            to="/browse"
-                            className="inline-flex items-center justify-center gap-1.5 text-xs font-bold text-white bg-black px-4 py-2 rounded-xl shadow-xs hover:bg-gray-800 transition-all"
-                          >
+                          </span>
+
+                          <Link to="/browse" className="explore-button">
                             <Send className="w-3.5 h-3.5" />
                             Explore Opportunities
                           </Link>

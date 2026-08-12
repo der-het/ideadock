@@ -143,6 +143,8 @@ export default function BrowseStartups() {
   const [roleRequested, setRoleRequested] = useState("");
   const [pitchMessage, setPitchMessage] = useState("");
 
+  const [notification, setNotification] = useState(null);
+
   /* =======================================================
      Safely Ensure Startups Is An Array
   ======================================================= */
@@ -275,7 +277,28 @@ export default function BrowseStartups() {
         );
 
         if (!result.success) {
-          alert(result.message || "Failed to submit pitch.");
+          if (
+            result.message ===
+            "You have already submitted a join request for this startup"
+          ) {
+            setNotification({
+              title: "Already Joined",
+              message:
+                "You have already submitted a join request for this startup",
+            });
+          } else {
+            setNotification({
+              title: "Unable to Submit",
+              message: result.message || "Failed to submit pitch.",
+            });
+          }
+
+          setActiveModalStartup(null);
+
+          setTimeout(() => {
+            setNotification(null);
+          }, 4000);
+
           return;
         }
       }
@@ -283,8 +306,14 @@ export default function BrowseStartups() {
       setActiveModalStartup(null);
     } catch (err) {
       console.error("Failed to send pitch:", err);
+      setNotification({
+        title: "Something Went Wrong",
+        message: "An error occurred while sending your pitch.",
+      });
 
-      alert("An error occurred while sending your pitch.");
+      setTimeout(() => {
+        setNotification(null);
+      }, 4000);
     } finally {
       setPitchingId(null);
     }
@@ -398,6 +427,33 @@ export default function BrowseStartups() {
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12 min-h-screen">
+      {notification && (
+        <div className="fixed top-8 left-1/2 -translate-x-1/2 z-[100] w-[420px] max-w-[calc(100%-2rem)]">
+          <div className="bg-white border border-red-200 rounded-2xl shadow-lg px-5 py-4 flex items-center gap-4">
+            <div className="w-8 h-8 rounded-full border border-red-200 bg-red-50 flex items-center justify-center shrink-0">
+              <AlertCircle className="w-4 h-4 text-red-500" />
+            </div>
+
+            <div className="flex-1 min-w-0">
+              <p className="text-xs font-bold text-gray-900">
+                {notification.title}
+              </p>
+
+              <p className="text-[11px] text-gray-400 mt-0.5">
+                {notification.message}
+              </p>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => setNotification(null)}
+              className="text-gray-300 hover:text-gray-600 transition-colors cursor-pointer"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+      )}
       {/* ===================================================
           Page Header
       =================================================== */}

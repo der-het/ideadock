@@ -49,8 +49,13 @@ export default function Sidebar({
       {/* Brand Logo Header */}
       <div className="sidebar-brand">
         <div className="brand-icon-wrapper">
-          <Rocket size={20} className="brand-logo-icon" />
+          <img
+            src="/logo.png"
+            alt="StartupConnect Logo"
+            className="brand-logo-image"
+          />
         </div>
+
         <div className="brand-text-container">
           <h1 className="brand-title">StartupConnect</h1>
           <span className="brand-subtitle">Admin Console</span>

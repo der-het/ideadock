@@ -1,5 +1,7 @@
 // backend/src/controllers/startupController.js
+
 const Startup = require("../models/Startup");
+const JoinRequest = require("../models/JoinRequest");
 
 // @desc    Create a new startup post
 // @route   POST /api/startups
@@ -12,6 +14,12 @@ const createStartup = async (req, res) => {
       category,
       user,
       seatsNeeded,
+
+      // NEW FIELDS
+      founded,
+      size,
+      funding,
+
       requiredSkills,
       whatsappNumber,
     } = req.body;
@@ -30,10 +38,18 @@ const createStartup = async (req, res) => {
       description,
       category,
       user,
+
       seatsNeeded: seatsNeeded || 1,
+
+      // NEW FIELDS
+      founded: founded || null,
+      size: size || "",
+      funding: funding || "",
+
       requiredSkills: requiredSkills || [],
       whatsappNumber,
-      status: "pending", // Default requires admin approval
+
+      status: "pending",
     });
 
     res.status(201).json({
@@ -140,7 +156,10 @@ const updateStartupStatus = async (req, res) => {
     const startup = await Startup.findByIdAndUpdate(
       req.params.id,
       { status },
-      { new: true, runValidators: true },
+      {
+        new: true,
+        runValidators: true,
+      },
     );
 
     if (!startup) {
@@ -191,20 +210,24 @@ const deleteStartup = async (req, res) => {
   }
 };
 
+// @desc    Create Join Request
+// @route   POST /api/requests
 const createJoinRequest = async (req, res) => {
   try {
     const { startupId, roleRequested, message } = req.body;
-    const userId = req.user._id; // Assumes your auth middleware attaches req.user
+
+    const userId = req.user._id;
 
     // Check if request already exists
     const existing = await JoinRequest.findOne({
       startup: startupId,
       user: userId,
     });
+
     if (existing) {
       return res.status(400).json({
         success: false,
-        message: "You have already pitched to this startup.",
+        message: "You have already submitted a join request for this startup",
       });
     }
 
@@ -216,9 +239,15 @@ const createJoinRequest = async (req, res) => {
       status: "pending",
     });
 
-    res.status(201).json({ success: true, joinRequest: newRequest });
+    res.status(201).json({
+      success: true,
+      joinRequest: newRequest,
+    });
   } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
   }
 };
 
@@ -226,10 +255,19 @@ const createJoinRequest = async (req, res) => {
 // @route   GET /api/join-requests/my-requests
 const getMyJoinRequests = async (req, res) => {
   try {
-    const requests = await JoinRequest.find({ user: req.user._id });
-    res.status(200).json({ success: true, requests });
+    const requests = await JoinRequest.find({
+      user: req.user._id,
+    });
+
+    res.status(200).json({
+      success: true,
+      requests,
+    });
   } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
   }
 };
 

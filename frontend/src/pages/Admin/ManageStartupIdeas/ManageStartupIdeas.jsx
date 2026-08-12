@@ -25,7 +25,7 @@ export default function ManageStartupIdeas() {
   const [statusFilter, setStatusFilter] = useState("All");
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  // Updated state matching all Mongoose schema requirements
+  // Startup form state
   const [newStartup, setNewStartup] = useState({
     startupName: "",
     founderName: "",
@@ -34,25 +34,41 @@ export default function ManageStartupIdeas() {
     category: "Sustainability",
     seatsNeeded: 1,
     requiredSkills: "React, Node.js",
+
+    // NEW FIELDS
+    foundedYear: "",
+    companySize: "",
+    fundingStage: "",
+
     description: "",
     status: "approved",
   });
 
   const getCategoryTheme = (category = "") => {
     const cat = category.toLowerCase();
+
     if (cat.includes("sustain") || cat.includes("green"))
       return { icon: Rocket, color: "#004ac6" };
+
     if (cat.includes("health") || cat.includes("bio"))
       return { icon: Activity, color: "#004ac6" };
+
     if (cat.includes("fin") || cat.includes("crypto") || cat.includes("web3"))
       return { icon: Shield, color: "#ba1a1a" };
+
     if (cat.includes("ed") || cat.includes("learn"))
       return { icon: BookOpen, color: "#943700" };
+
     return { icon: Award, color: "#004ac6" };
   };
 
+  // =========================================================
+  // FETCH STARTUP IDEAS
+  // =========================================================
+
   const fetchStartupIdeas = async () => {
     setLoading(true);
+
     try {
       const response = await axios.get(
         "http://localhost:5000/api/admin/startups",
@@ -64,6 +80,7 @@ export default function ManageStartupIdeas() {
       );
 
       const rawData = response.data?.startups || response.data || [];
+
       if (Array.isArray(rawData)) {
         formatAndSetIdeas(rawData);
       } else {
@@ -71,11 +88,16 @@ export default function ManageStartupIdeas() {
       }
     } catch (err) {
       console.warn("Backend startup endpoint unreachable:", err.message);
+
       setIdeasData([]);
     } finally {
       setLoading(false);
     }
   };
+
+  // =========================================================
+  // FORMAT DATA
+  // =========================================================
 
   const formatAndSetIdeas = (list) => {
     const formatted = list.map((item, index) => {
@@ -88,20 +110,25 @@ export default function ManageStartupIdeas() {
 
       return {
         id: item._id || item.id || index + 1,
+
         name: item.startupName || item.title || item.name || "Untitled Venture",
+
         founder:
           item.founderName ||
           item.user?.name ||
           item.founder?.name ||
           item.ownerName ||
           "Anonymous Founder",
+
         email:
           item.founderEmail ||
           item.user?.email ||
           item.founder?.email ||
           item.contactEmail ||
           "no-email@startup.io",
+
         category: categoryName,
+
         datePosted: item.createdAt
           ? new Date(item.createdAt).toLocaleDateString("en-US", {
               month: "short",
@@ -109,7 +136,9 @@ export default function ManageStartupIdeas() {
               year: "numeric",
             })
           : "Recent",
+
         status: item.status ? item.status.trim() : "approved",
+
         icon: theme.icon,
         iconColor: theme.color,
       };
@@ -118,9 +147,17 @@ export default function ManageStartupIdeas() {
     setIdeasData(formatted);
   };
 
+  // =========================================================
+  // LOAD DATA
+  // =========================================================
+
   useEffect(() => {
     fetchStartupIdeas();
   }, []);
+
+  // =========================================================
+  // DELETE STARTUP
+  // =========================================================
 
   const handleDelete = async (id, name) => {
     if (!window.confirm(`Are you sure you want to delete "${name}"?`)) return;
@@ -131,22 +168,41 @@ export default function ManageStartupIdeas() {
           Authorization: `Bearer ${localStorage.getItem("sc_token")}`,
         },
       });
+
       setIdeasData((prev) => prev.filter((idea) => idea.id !== id));
     } catch (err) {
       console.error("Failed to delete startup:", err);
+
       setIdeasData((prev) => prev.filter((idea) => idea.id !== id));
     }
   };
 
+  // =========================================================
+  // ADD STARTUP
+  // =========================================================
+
   const handleAddSubmit = async (e) => {
     e.preventDefault();
-    if (!newStartup.startupName.trim() || !newStartup.whatsappNumber.trim())
+
+    if (!newStartup.startupName.trim() || !newStartup.whatsappNumber.trim()) {
       return;
+    }
 
     try {
+      const payload = {
+        ...newStartup,
+
+        // Send the names expected by Startup.js
+        founded: newStartup.foundedYear ? Number(newStartup.foundedYear) : null,
+
+        size: newStartup.companySize,
+
+        funding: newStartup.fundingStage,
+      };
+
       const response = await axios.post(
         "http://localhost:5000/api/admin/startups",
-        newStartup,
+        payload,
         {
           headers: {
             Authorization: `Bearer ${localStorage.getItem("sc_token")}`,
@@ -159,10 +215,13 @@ export default function ManageStartupIdeas() {
       }
     } catch (err) {
       console.error("Failed to add startup:", err);
+
       alert(err.response?.data?.message || "Failed to create startup idea.");
     }
 
     setIsModalOpen(false);
+
+    // Reset form
     setNewStartup({
       startupName: "",
       founderName: "",
@@ -171,15 +230,28 @@ export default function ManageStartupIdeas() {
       category: "Sustainability",
       seatsNeeded: 1,
       requiredSkills: "React, Node.js",
+
+      foundedYear: "",
+      companySize: "",
+      fundingStage: "",
+
       description: "",
       status: "approved",
     });
   };
 
+  // =========================================================
+  // CATEGORIES
+  // =========================================================
+
   const categoriesList = [
     "All",
     ...new Set(ideasData.map((idea) => idea.category)),
   ];
+
+  // =========================================================
+  // FILTER
+  // =========================================================
 
   const filteredIdeas = ideasData.filter((idea) => {
     const matchesSearch =
@@ -199,12 +271,16 @@ export default function ManageStartupIdeas() {
 
   return (
     <div className="manage-ideas-page space-y-6 text-left">
-      {/* Header */}
+      {/* =====================================================
+          HEADER
+      ===================================================== */}
+
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
           <h2 className="text-2xl font-extrabold text-gray-900 tracking-tight">
             Manage Startup Ideas
           </h2>
+
           <p className="text-gray-500 text-xs mt-0.5">
             Review, approve, and moderate submitted startup concepts.
           </p>
@@ -220,25 +296,32 @@ export default function ManageStartupIdeas() {
               loading ? "animate-spin text-indigo-600" : "text-gray-500"
             }`}
           />
+
           <span>Refresh</span>
         </button>
       </div>
 
-      {/* Metric Card & Add Button */}
+      {/* =====================================================
+          METRIC CARD + ADD BUTTON
+      ===================================================== */}
+
       <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4">
         <div className="bg-white border border-gray-100 p-5 rounded-2xl shadow-2xs flex flex-col justify-between w-full sm:w-80">
           <div className="flex items-center justify-between">
             <div className="w-8 h-8 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center font-bold">
               <Lightbulb className="w-4 h-4" />
             </div>
+
             <span className="text-[10px] font-bold font-mono text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200">
               Live DB
             </span>
           </div>
+
           <div className="mt-4">
             <p className="text-[10px] font-mono font-bold text-gray-400 uppercase tracking-widest">
               TOTAL IDEAS
             </p>
+
             <h3 className="text-2xl font-black text-gray-900 font-mono mt-0.5">
               {ideasData.length}
             </h3>
@@ -257,12 +340,19 @@ export default function ManageStartupIdeas() {
         </div>
       </div>
 
-      {/* Main Table Card */}
+      {/* =====================================================
+          MAIN TABLE
+      ===================================================== */}
+
       <div className="bg-white border border-gray-100 rounded-2xl shadow-2xs overflow-hidden">
         {/* Search & Filters */}
-        {/* <div className="p-4 border-b border-gray-100 flex flex-col sm:flex-row gap-3 items-center justify-between bg-gray-50/50">
+
+        {/* 
+        <div className="p-4 border-b border-gray-100 flex flex-col sm:flex-row gap-3 items-center justify-between bg-gray-50/50">
+
           <div className="relative w-full sm:w-80">
             <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+
             <input
               type="text"
               placeholder="Search by startup or founder..."
@@ -273,6 +363,7 @@ export default function ManageStartupIdeas() {
           </div>
 
           <div className="flex gap-2 w-full sm:w-auto">
+
             <select
               value={categoryFilter}
               onChange={(e) => setCategoryFilter(e.target.value)}
@@ -294,20 +385,29 @@ export default function ManageStartupIdeas() {
               <option value="approved">Status: Approved</option>
               <option value="pending">Status: Pending</option>
             </select>
-          </div>
-        </div> */}
 
-        {/* Data Table */}
+          </div>
+        </div>
+        */}
+
+        {/* =====================================================
+            DATA TABLE
+        ===================================================== */}
+
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead>
               <tr className="bg-gray-50/50 border-b border-gray-100 text-[11px] font-bold text-gray-400 uppercase font-mono tracking-wider">
                 <th className="py-3.5 px-4">Startup Name</th>
+
                 <th className="py-3.5 px-4">Category</th>
+
                 <th className="py-3.5 px-4">Status</th>
+
                 <th className="py-3.5 px-4 text-right">Actions</th>
               </tr>
             </thead>
+
             <tbody className="divide-y divide-gray-50 text-xs text-gray-900 font-medium">
               {loading ? (
                 <tr>
@@ -323,9 +423,11 @@ export default function ManageStartupIdeas() {
                   <td colSpan={6} className="py-12 text-center">
                     <div className="max-w-xs mx-auto space-y-2">
                       <Layers className="w-8 h-8 text-gray-300 mx-auto" />
+
                       <p className="font-bold text-gray-700">
                         No startup ideas found
                       </p>
+
                       <p className="text-[11px] text-gray-400">
                         Click "Add Startup Concept" to create your first entry.
                       </p>
@@ -335,6 +437,7 @@ export default function ManageStartupIdeas() {
               ) : (
                 filteredIdeas.map((idea) => {
                   const StartupIcon = idea.icon;
+
                   const isPending = idea.status.toLowerCase() === "pending";
 
                   return (
@@ -352,13 +455,14 @@ export default function ManageStartupIdeas() {
                         >
                           <StartupIcon className="w-4 h-4" />
                         </div>
+
                         <span className="truncate max-w-[180px]">
                           {idea.name}
                         </span>
                       </td>
 
                       <td className="py-4 px-4 text-gray-500 font-mono text-[11px]">
-                        {idea.datePosted}
+                        {idea.category}
                       </td>
 
                       <td className="py-4 px-4">
@@ -374,6 +478,7 @@ export default function ManageStartupIdeas() {
                               isPending ? "bg-amber-500" : "bg-emerald-500"
                             }`}
                           />
+
                           {idea.status}
                         </span>
                       </td>
@@ -396,7 +501,10 @@ export default function ManageStartupIdeas() {
           </table>
         </div>
 
-        {/* Footer */}
+        {/* =====================================================
+            FOOTER
+        ===================================================== */}
+
         <div className="p-4 bg-gray-50/50 border-t border-gray-100 flex items-center justify-between text-xs text-gray-500 font-mono">
           <span>
             Showing 1-{filteredIdeas.length} of {ideasData.length} entries
@@ -404,14 +512,20 @@ export default function ManageStartupIdeas() {
         </div>
       </div>
 
-      {/* Add Startup Modal */}
+      {/* =====================================================
+          ADD STARTUP MODAL
+      ===================================================== */}
+
       {isModalOpen && (
         <div className="fixed inset-0 bg-black/40 backdrop-blur-xs flex items-center justify-center z-50 p-4">
           <div className="bg-white border border-gray-100 rounded-2xl max-w-md w-full p-6 shadow-xl space-y-4">
+            {/* Modal Header */}
+
             <div className="flex justify-between items-center pb-3 border-b border-gray-100">
               <h3 className="font-extrabold text-base text-gray-900">
                 Add Startup Concept
               </h3>
+
               <button
                 type="button"
                 onClick={() => setIsModalOpen(false)}
@@ -421,11 +535,18 @@ export default function ManageStartupIdeas() {
               </button>
             </div>
 
+            {/* =================================================
+                FORM
+            ================================================= */}
+
             <form onSubmit={handleAddSubmit} className="space-y-3">
+              {/* Startup Name */}
+
               <div>
                 <label className="block text-xs font-bold text-gray-700 mb-1">
                   Startup Name
                 </label>
+
                 <input
                   type="text"
                   required
@@ -441,11 +562,14 @@ export default function ManageStartupIdeas() {
                 />
               </div>
 
+              {/* Founder + WhatsApp */}
+
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block text-xs font-bold text-gray-700 mb-1">
                     Founder Name
                   </label>
+
                   <input
                     type="text"
                     required
@@ -465,6 +589,7 @@ export default function ManageStartupIdeas() {
                   <label className="block text-xs font-bold text-gray-700 mb-1">
                     WhatsApp Number
                   </label>
+
                   <input
                     type="text"
                     required
@@ -481,10 +606,13 @@ export default function ManageStartupIdeas() {
                 </div>
               </div>
 
+              {/* Founder Email */}
+
               <div>
                 <label className="block text-xs font-bold text-gray-700 mb-1">
                   Founder Email
                 </label>
+
                 <input
                   type="email"
                   required
@@ -500,11 +628,14 @@ export default function ManageStartupIdeas() {
                 />
               </div>
 
+              {/* Category + Seats */}
+
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block text-xs font-bold text-gray-700 mb-1">
                     Category
                   </label>
+
                   <select
                     value={newStartup.category}
                     onChange={(e) =>
@@ -516,9 +647,13 @@ export default function ManageStartupIdeas() {
                     className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-xs focus:outline-none focus:border-black font-bold"
                   >
                     <option value="Sustainability">Sustainability</option>
+
                     <option value="Healthtech">Healthtech</option>
+
                     <option value="Fintech">Fintech</option>
+
                     <option value="Edtech">Edtech</option>
+
                     <option value="AI/ML">AI/ML</option>
                   </select>
                 </div>
@@ -527,6 +662,7 @@ export default function ManageStartupIdeas() {
                   <label className="block text-xs font-bold text-gray-700 mb-1">
                     Seats Needed
                   </label>
+
                   <input
                     type="number"
                     min="1"
@@ -543,10 +679,13 @@ export default function ManageStartupIdeas() {
                 </div>
               </div>
 
+              {/* Required Skills */}
+
               <div>
                 <label className="block text-xs font-bold text-gray-700 mb-1">
                   Required Skills (comma separated)
                 </label>
+
                 <input
                   type="text"
                   placeholder="React, Node.js, Python"
@@ -561,11 +700,107 @@ export default function ManageStartupIdeas() {
                 />
               </div>
 
+              {/* =================================================
+                  NEW FIELDS
+              ================================================= */}
+
+              <div className="grid grid-cols-2 gap-3">
+                {/* Founded Year */}
+
+                <div>
+                  <label className="block text-xs font-bold text-gray-700 mb-1">
+                    Founded Year
+                  </label>
+
+                  <input
+                    type="number"
+                    min="1900"
+                    max={new Date().getFullYear()}
+                    placeholder="e.g. 2024"
+                    value={newStartup.foundedYear}
+                    onChange={(e) =>
+                      setNewStartup({
+                        ...newStartup,
+                        foundedYear: e.target.value,
+                      })
+                    }
+                    className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-xs focus:outline-none focus:border-black"
+                  />
+                </div>
+
+                {/* Company Size */}
+
+                <div>
+                  <label className="block text-xs font-bold text-gray-700 mb-1">
+                    Company Size
+                  </label>
+
+                  <select
+                    value={newStartup.companySize}
+                    onChange={(e) =>
+                      setNewStartup({
+                        ...newStartup,
+                        companySize: e.target.value,
+                      })
+                    }
+                    className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-xs focus:outline-none focus:border-black font-bold"
+                  >
+                    <option value="">Select Size</option>
+
+                    <option value="1 member">1 member</option>
+
+                    <option value="2-5 members">2-5 members</option>
+
+                    <option value="6-10 members">6-10 members</option>
+
+                    <option value="11-25 members">11-25 members</option>
+
+                    <option value="25+ members">25+ members</option>
+                  </select>
+                </div>
+              </div>
+
+              {/* Funding Stage */}
+
+              <div>
+                <label className="block text-xs font-bold text-gray-700 mb-1">
+                  Funding Stage
+                </label>
+
+                <select
+                  value={newStartup.fundingStage}
+                  onChange={(e) =>
+                    setNewStartup({
+                      ...newStartup,
+                      fundingStage: e.target.value,
+                    })
+                  }
+                  className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-xs focus:outline-none focus:border-black font-bold"
+                >
+                  <option value="">Select Funding Stage</option>
+
+                  <option value="Bootstrapped">Bootstrapped</option>
+
+                  <option value="Pre-Seed">Pre-Seed</option>
+
+                  <option value="Seed">Seed</option>
+
+                  <option value="Series A">Series A</option>
+
+                  <option value="Series B">Series B</option>
+
+                  <option value="Series C">Series C</option>
+                </select>
+              </div>
+
+              {/* Status */}
+
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block text-xs font-bold text-gray-700 mb-1">
                     Status
                   </label>
+
                   <select
                     value={newStartup.status}
                     onChange={(e) =>
@@ -577,15 +812,19 @@ export default function ManageStartupIdeas() {
                     className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-xs focus:outline-none focus:border-black font-bold"
                   >
                     <option value="approved">Approved</option>
+
                     <option value="pending">Pending</option>
                   </select>
                 </div>
               </div>
 
+              {/* Description */}
+
               <div>
                 <label className="block text-xs font-bold text-gray-700 mb-1">
                   Description
                 </label>
+
                 <textarea
                   rows="2"
                   required
@@ -601,6 +840,8 @@ export default function ManageStartupIdeas() {
                 ></textarea>
               </div>
 
+              {/* Buttons */}
+
               <div className="pt-3 flex gap-2">
                 <button
                   type="button"
@@ -609,6 +850,7 @@ export default function ManageStartupIdeas() {
                 >
                   Cancel
                 </button>
+
                 <button
                   type="submit"
                   className="flex-1 py-2.5 rounded-xl bg-black hover:bg-gray-800 text-white text-xs font-bold cursor-pointer"

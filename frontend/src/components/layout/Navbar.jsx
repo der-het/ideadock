@@ -35,12 +35,17 @@ export default function Navbar() {
     <header className="bg-white border-b border-gray-100 sticky top-0 z-40">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
         {/* Logo */}
-        <Link to="/" className="flex items-center gap-2.5">
-          <div className="w-9 h-9 rounded-full bg-black text-white flex items-center justify-center font-black">
-            <Rocket className="w-5 h-5" />
+        <Link className="flex items-center gap-2.5">
+          <div className="w-9 h-9 rounded-full overflow-hidden flex items-center justify-center">
+            <img
+              src="../../../public/logo.svg"
+              alt="IDEADOCK Logo"
+              className="w-full h-full object-contain"
+            />
           </div>
+
           <span className="font-extrabold text-lg text-gray-900 tracking-tight">
-            StartupConnect
+            IDEADOCK
           </span>
         </Link>
 

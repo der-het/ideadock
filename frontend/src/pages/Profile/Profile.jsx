@@ -237,27 +237,9 @@ export default function Profile() {
       </div>
 
       {/* Quick Statistics Strip (Fully Dynamic) */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-        <div className="bg-white border border-gray-100 p-5 rounded-2xl shadow-2xs text-left">
-          <p className="text-xs font-bold text-gray-400 uppercase tracking-wider font-mono">
-            Endorsements
-          </p>
-          <p className="text-2xl font-extrabold text-gray-900 font-mono mt-1">
-            {dynamicEndorsements}
-          </p>
-        </div>
-        <div className="bg-white border border-gray-100 p-5 rounded-2xl shadow-2xs text-left">
-          <p className="text-xs font-bold text-gray-400 uppercase tracking-wider font-mono">
-            Teams Joined
-          </p>
-          <p className="text-2xl font-extrabold text-gray-900 font-mono mt-1">
-            {dynamicTeamsJoined}
-          </p>
-        </div>
-      </div>
 
       {/* Tabs Layout */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+      <div className=" gap-8 items-start">
         {/* Main tabs view */}
         <div className="lg:col-span-8 space-y-6">
           {/* Active Tab Content */}

@@ -20,24 +20,24 @@ export default function About() {
       role: "Full Stack Developer",
       image: "../../../Private/swet.png",
       description:
-        "Worked on the development and integration of the StartupConnect platform.",
-      skills: ["React", "Node.js", "MongoDB"],
+        "Worked on the development and integration of the IdeaDock platform and backend functionality, APIs, database operations, and server logic.",
+      skills: ["React", "Node.js", "MongoDB", " Express", "JavaScript", "CSS"],
     },
     {
-      name: "Bhalani Rushakuni",
+      name: "Bhadani Rushank",
       role: "Frontend Developer",
-      image: "../../../Private/rushakuni.png",
+      image: "../../../Private/rushank.png",
       description:
         "Worked on the frontend interface, responsive design, and user experience.",
       skills: ["React", "JavaScript", "CSS"],
     },
     {
-      name: "Gadhvi Krishna",
+      name: "Gadhiya Krishna",
       role: "Tester & QA",
-      image: "/creator3.jpg",
+      image: "../../../Private/krishna.png",
       description:
-        "Worked on backend functionality, APIs, database operations, and server logic.",
-      skills: ["Node.js", "Express", "MongoDB"],
+        "Worked on testing the platform, identifying bugs, and ensuring the quality of the application.",
+      skills: ["Node.js", "Express", "MongoDB", "testing"],
     },
   ];
 
@@ -53,7 +53,7 @@ export default function About() {
         </div>
 
         <h1>
-          StartupConnect
+          IdeaDock
           <br />
           <span>Connecting Ideas & People.</span>
         </h1>
@@ -78,7 +78,7 @@ export default function About() {
           <div className="project-info-card">
             <span className="project-info-number">01</span>
             <span className="project-info-label">PROJECT</span>
-            <h3>StartupConnect</h3>
+            <h3>IdeaDock</h3>
             <p>College Minor Project</p>
           </div>
 
@@ -125,10 +125,10 @@ export default function About() {
 
           <div>
             <p>
-              StartupConnect is a web-based platform developed as a college
-              minor project. The main purpose of the project is to provide a
-              place where users can discover startup ideas and connect with
-              people who may be interested in working on them.
+              IdeaDock is a web-based platform developed as a college minor
+              project. The main purpose of the project is to provide a place
+              where users can discover startup ideas and connect with people who
+              may be interested in working on them.
             </p>
 
             <p>
@@ -153,7 +153,7 @@ export default function About() {
           <div className="about-number">01</div>
 
           <div>
-            <h2>Why we built StartupConnect</h2>
+            <h2>Why we built IdeaDock</h2>
 
             <p>
               Many students have interesting ideas but may not have all the
@@ -161,9 +161,9 @@ export default function About() {
             </p>
 
             <p>
-              StartupConnect attempts to solve this problem by providing a
-              platform where people can discover startup opportunities and
-              connect with others based on their skills and interests.
+              IdeaDock attempts to solve this problem by providing a platform
+              where people can discover startup opportunities and connect with
+              others based on their skills and interests.
             </p>
 
             <div className="objective-list">
@@ -248,8 +248,8 @@ export default function About() {
         </div>
 
         <p className="team-intro">
-          StartupConnect was developed by a team of four students as part of
-          their college minor project.
+          IdeaDock was developed by a team of four students as part of their
+          college minor project.
         </p>
 
         <div className="team-grid">
@@ -297,18 +297,14 @@ export default function About() {
             <h2>Learning through development.</h2>
 
             <p>
-              Developing StartupConnect gave our team practical experience in
-              frontend development, backend development, database management,
+              Developing IdeaDock gave our team practical experience in frontend
+              development, backend development, database management,
               authentication, API integration, UI design, and collaborative
               software development.
             </p>
           </div>
         </div>
       </section>
-
-      {/* =====================================================
-          CTA
-      ===================================================== */}
     </div>
   );
 }

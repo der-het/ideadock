@@ -32,13 +32,21 @@
   color: var(--color-on-primary);
 }
 
-.brand-logo-icon {
-  animation: float 3s ease-in-out infinite;
+.brand-logo-image {
+  width: 32px;
+  height: 32px;
+  object-fit: contain;
+  display: block;
 }
 
 @keyframes float {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-3px); }
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-3px);
+  }
 }
 
 .brand-text-container {

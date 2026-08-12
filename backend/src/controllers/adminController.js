@@ -176,25 +176,38 @@ const createAdminStartup = async (req, res) => {
       category: categoryInput,
       user: userInput,
       seatsNeeded,
+
+      // NEW FIELDS
+      founded,
+      size,
+      funding,
+
       requiredSkills,
       whatsappNumber,
       status: statusInput,
     } = req.body;
 
-    // 1. Resolve Category ObjectId (find or create category doc)
+    // 1. Resolve Category ObjectId
     const categoryName = categoryInput || "General";
+
     let categoryDoc = await Category.findOne({
-      name: { $regex: new RegExp(`^${categoryName}$`, "i") },
+      name: {
+        $regex: new RegExp(`^${categoryName}$`, "i"),
+      },
     });
 
     if (!categoryDoc) {
-      categoryDoc = await Category.create({ name: categoryName });
+      categoryDoc = await Category.create({
+        name: categoryName,
+      });
     }
 
     // 2. Resolve User ObjectId
     let userId = userInput || req.user?._id;
+
     if (!userId) {
       const fallbackUser = await User.findOne();
+
       if (fallbackUser) {
         userId = fallbackUser._id;
       } else {
@@ -204,45 +217,87 @@ const createAdminStartup = async (req, res) => {
           password: "password123",
           role: "admin",
         });
+
         userId = defaultUser._id;
       }
     }
 
-    // 3. Normalize Status to match schema enum ["pending", "approved", "rejected"]
+    // 3. Normalize Status
     let formattedStatus = (statusInput || "approved").toLowerCase();
-    if (formattedStatus === "active") formattedStatus = "approved";
+
+    if (formattedStatus === "active") {
+      formattedStatus = "approved";
+    }
+
     if (!["pending", "approved", "rejected"].includes(formattedStatus)) {
       formattedStatus = "approved";
     }
 
-    // 4. Construct payload matching exact Mongoose schema requirements
+    // 4. Normalize required skills
+    let formattedSkills = [];
+
+    if (Array.isArray(requiredSkills)) {
+      formattedSkills = requiredSkills;
+    } else if (typeof requiredSkills === "string") {
+      formattedSkills = requiredSkills
+        .split(",")
+        .map((skill) => skill.trim())
+        .filter(Boolean);
+    } else {
+      formattedSkills = ["Full Stack", "General"];
+    }
+
+    // 5. Construct startup payload
     const startupData = {
       startupName: startupName || title || name || "Untitled Venture",
+
       description:
         description || "A novel venture concept added via the admin console.",
+
       category: categoryDoc._id,
+
       user: userId,
+
       seatsNeeded: Number(seatsNeeded) || 1,
-      requiredSkills: Array.isArray(requiredSkills)
-        ? requiredSkills
-        : typeof requiredSkills === "string"
-          ? requiredSkills.split(",").map((s) => s.trim())
-          : ["Full Stack", "General"],
+
+      // =========================================
+      // NEW FIELDS
+      // =========================================
+
+      founded:
+        founded !== undefined && founded !== null && founded !== ""
+          ? Number(founded)
+          : null,
+
+      size: size || "",
+
+      funding: funding || "",
+
+      // =========================================
+
+      requiredSkills: formattedSkills,
+
       whatsappNumber: whatsappNumber || "+1234567890",
+
       status: formattedStatus,
     };
 
+    // 6. Save startup
     const newStartup = await Startup.create(startupData);
 
+    // 7. Populate category and user
     await newStartup.populate("category", "name");
+
     await newStartup.populate("user", "name email");
 
+    // 8. Send response
     return res.status(201).json({
       success: true,
       startup: newStartup,
     });
   } catch (error) {
     console.error("Error creating startup in adminController:", error);
+
     return res.status(500).json({
       success: false,
       message: error.message,

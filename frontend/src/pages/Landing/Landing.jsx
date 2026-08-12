@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 import { useApp } from "../../context/AppContext.jsx";
+import landingPageImage from "../../../public/landing-page.png";
 import { motion } from "motion/react";
 import {
   Brain,
@@ -138,7 +139,7 @@ export default function Landing() {
               className="relative rounded-3xl overflow-hidden shadow-2xl border border-gray-100 max-w-md lg:max-w-none mx-auto bg-white p-2 group"
             >
               <img
-                src={IMAGES.landingHero}
+                src={landingPageImage}
                 alt="StartupConnect workspace"
                 referrerPolicy="no-referrer"
                 className="rounded-2xl object-cover w-full aspect-4/3 shadow-inner group-hover:scale-[1.02] transition-transform duration-700"
