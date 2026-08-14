@@ -131,6 +131,9 @@ const getUserRequests = async (req, res) => {
 // @desc    Update request status (Approve / Reject)
 // @route   PUT /api/requests/:id/status
 // @access  Public
+// @desc    Update request status (Approve / Reject)
+// @route   PUT /api/requests/:id/status
+// @access  Public
 const updateRequestStatus = async (req, res) => {
   try {
     const { status } = req.body;
@@ -153,22 +156,80 @@ const updateRequestStatus = async (req, res) => {
       });
     }
 
+    // ---------------------------------------------
+    // PREVENT DUPLICATE APPROVAL
+    // ---------------------------------------------
+    if (joinRequest.status === "approved" && status === "approved") {
+      return res.status(400).json({
+        success: false,
+        message: "This request is already approved",
+      });
+    }
+
+    // ---------------------------------------------
+    // APPROVE REQUEST
+    // ---------------------------------------------
+    if (status === "approved") {
+      const startup = joinRequest.startup;
+
+      if (!startup) {
+        return res.status(404).json({
+          success: false,
+          message: "Startup not found",
+        });
+      }
+
+      // ---------------------------------------------
+      // CHECK AVAILABLE SEATS
+      // ---------------------------------------------
+      if (startup.seatsNeeded <= 0) {
+        return res.status(400).json({
+          success: false,
+          message: "No seats are available in this startup",
+        });
+      }
+
+      // ---------------------------------------------
+      // DECREASE AVAILABLE SEATS
+      // ---------------------------------------------
+      startup.seatsNeeded -= 1;
+
+      await startup.save();
+
+      // Now approve the request
+      joinRequest.status = "approved";
+      await joinRequest.save();
+
+      return res.status(200).json({
+        success: true,
+        message: "Request approved and one seat has been reserved",
+        request: joinRequest,
+        startup: {
+          _id: startup._id,
+          seatsNeeded: startup.seatsNeeded,
+        },
+        whatsappNumber: startup.whatsappNumber,
+        whatsappLink: `https://wa.me/${startup.whatsappNumber.replace(
+          /[^0-9]/g,
+          "",
+        )}`,
+      });
+    }
+
+    // ---------------------------------------------
+    // REJECT / PENDING
+    // ---------------------------------------------
     joinRequest.status = status;
     await joinRequest.save();
 
-    const responseData = {
+    return res.status(200).json({
       success: true,
       message: `Request status updated to ${status}`,
       request: joinRequest,
-    };
-
-    if (status === "approved" && joinRequest.startup) {
-      responseData.whatsappNumber = joinRequest.startup.whatsappNumber;
-      responseData.whatsappLink = `https://wa.me/${joinRequest.startup.whatsappNumber.replace(/[^0-9]/g, "")}`;
-    }
-
-    res.status(200).json(responseData);
+    });
   } catch (error) {
+    console.error("Update request status error:", error);
+
     res.status(500).json({
       success: false,
       message: error.message,

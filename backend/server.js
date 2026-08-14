@@ -5,6 +5,12 @@ const path = require("path");
 const cors = require("cors");
 const connectDB = require("./src/config/db"); // Import DB function
 
+const allowedOrigins = [
+  "http://localhost:3000",
+  "http://172.26.208.1:3000",
+  "http://192.168.56.1:3000",
+  "http://192.168.29.22:3000",
+];
 // Load environment variables
 dotenv.config();
 
@@ -16,7 +22,7 @@ const app = express();
 // Middleware
 app.use(
   cors({
-    origin: "http://localhost:3000",
+    origin: allowedOrigins,
     credentials: true,
   }),
 );

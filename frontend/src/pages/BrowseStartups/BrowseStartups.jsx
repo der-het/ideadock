@@ -247,6 +247,20 @@ export default function BrowseStartups() {
   const handleOpenPitchModal = (startup) => {
     const startupId = startup._id || startup.id;
 
+    // Prevent pitching if startup is full
+    if (Number(startup.seatsNeeded) <= 0) {
+      setNotification({
+        title: "Startup Full",
+        message: "This startup has no available seats.",
+      });
+
+      setTimeout(() => {
+        setNotification(null);
+      }, 4000);
+
+      return;
+    }
+
     if (isPitchSent(startupId)) return;
 
     setActiveModalStartup(startup);
@@ -264,6 +278,22 @@ export default function BrowseStartups() {
     if (!activeModalStartup) return;
 
     const startupId = activeModalStartup._id || activeModalStartup.id;
+
+    // Extra frontend protection
+    if (Number(activeModalStartup.seatsNeeded) <= 0) {
+      setActiveModalStartup(null);
+
+      setNotification({
+        title: "Startup Full",
+        message: "This startup has no available seats.",
+      });
+
+      setTimeout(() => {
+        setNotification(null);
+      }, 4000);
+
+      return;
+    }
 
     try {
       setPitchingId(startupId);
@@ -306,6 +336,7 @@ export default function BrowseStartups() {
       setActiveModalStartup(null);
     } catch (err) {
       console.error("Failed to send pitch:", err);
+
       setNotification({
         title: "Something Went Wrong",
         message: "An error occurred while sending your pitch.",
@@ -454,6 +485,7 @@ export default function BrowseStartups() {
           </div>
         </div>
       )}
+
       {/* ===================================================
           Page Header
       =================================================== */}
@@ -581,6 +613,11 @@ export default function BrowseStartups() {
 
                 const isCurrentlyPitching = pitchingId === startupId;
 
+                // =================================================
+                // NEW: CHECK IF STARTUP IS FULL
+                // =================================================
+                const isStartupFull = Number(startup.seatsNeeded) <= 0;
+
                 const skills = startup.skills || [];
 
                 const startupCategory =
@@ -661,19 +698,30 @@ export default function BrowseStartups() {
                       </div>
 
                       <div className="flex items-center gap-2.5 w-full sm:w-auto">
-                        {/* Send Pitch */}
+                        {/* =================================================
+                            SEND PITCH / STARTUP FULL
+                        ================================================= */}
 
                         <button
                           type="button"
                           onClick={() => handleOpenPitchModal(startup)}
-                          disabled={hasPitched || isCurrentlyPitching}
-                          className={`px-4 py-3 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer border ${
-                            hasPitched
-                              ? "bg-amber-50 text-amber-700 border-amber-200 cursor-default"
-                              : "bg-black text-white border-black hover:bg-gray-800"
+                          disabled={
+                            hasPitched || isCurrentlyPitching || isStartupFull
+                          }
+                          className={`px-4 py-3 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 border ${
+                            isStartupFull
+                              ? "bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed"
+                              : hasPitched
+                                ? "bg-amber-50 text-amber-700 border-amber-200 cursor-default"
+                                : "bg-black text-white border-black hover:bg-gray-800 cursor-pointer"
                           }`}
                         >
-                          {isCurrentlyPitching ? (
+                          {isStartupFull ? (
+                            <>
+                              <span className="text-sm">👥</span>
+                              Startup Full
+                            </>
+                          ) : isCurrentlyPitching ? (
                             <>
                               <Loader2 className="w-3.5 h-3.5 animate-spin" />
                               Pitching...
@@ -808,7 +856,12 @@ export default function BrowseStartups() {
 
                   <button
                     type="submit"
-                    className="flex-1 py-2.5 rounded-xl bg-black hover:bg-gray-800 text-white text-xs font-bold cursor-pointer"
+                    disabled={Number(activeModalStartup.seatsNeeded) <= 0}
+                    className={`flex-1 py-2.5 rounded-xl text-white text-xs font-bold ${
+                      Number(activeModalStartup.seatsNeeded) <= 0
+                        ? "bg-gray-400 cursor-not-allowed"
+                        : "bg-black hover:bg-gray-800 cursor-pointer"
+                    }`}
                   >
                     Submit Pitch
                   </button>

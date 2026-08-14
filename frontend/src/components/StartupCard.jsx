@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import axios from "axios";
-import { Send, MessageCircle, X, Clock, CheckCircle } from "lucide-react";
+import { Send, MessageCircle, X, Clock, Users } from "lucide-react";
 
 export default function StartupCard({ startup, userRequest }) {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -8,13 +8,27 @@ export default function StartupCard({ startup, userRequest }) {
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false);
 
-  // Track status locally based on prop ("none" | "pending" | "approved")
+  // Track status locally based on prop
+  // ("none" | "pending" | "approved")
   const [status, setStatus] = useState(
     userRequest ? userRequest.status.toLowerCase() : "none",
   );
 
+  // -----------------------------------------
+  // Check whether startup has no seats left
+  // -----------------------------------------
+  const isStartupFull = Number(startup.seatsNeeded) <= 0;
+
   const handleSendPitch = async (e) => {
     e.preventDefault();
+
+    // Extra protection:
+    // Do not allow a request if startup is full.
+    if (isStartupFull) {
+      alert("This startup is full. No seats are available.");
+      return;
+    }
+
     setLoading(true);
 
     try {
@@ -49,12 +63,13 @@ export default function StartupCard({ startup, userRequest }) {
         <h3 className="text-lg font-bold text-gray-900">
           {startup.startupName}
         </h3>
+
         <p className="text-xs text-gray-500 mt-1 line-clamp-2">
           {startup.description}
         </p>
       </div>
 
-      {/* Dynamic Action Button based on request state */}
+      {/* Dynamic Action Button */}
       <div className="pt-2">
         {status === "approved" ? (
           <a
@@ -71,7 +86,22 @@ export default function StartupCard({ startup, userRequest }) {
             <Clock className="w-4 h-4 text-amber-500 animate-pulse" />
             <span>Pitch Pending Admin Review...</span>
           </div>
+        ) : isStartupFull ? (
+          // -----------------------------------------
+          // STARTUP FULL
+          // -----------------------------------------
+          <button
+            type="button"
+            disabled
+            className="inline-flex items-center gap-2 px-4 py-2 bg-gray-100 text-gray-400 border border-gray-200 rounded-xl text-xs font-bold cursor-not-allowed"
+          >
+            <Users className="w-3.5 h-3.5" />
+            <span>Startup Full</span>
+          </button>
         ) : (
+          // -----------------------------------------
+          // SEND PITCH
+          // -----------------------------------------
           <button
             type="button"
             onClick={() => setIsModalOpen(true)}
@@ -103,6 +133,7 @@ export default function StartupCard({ startup, userRequest }) {
                 <label className="block text-xs font-bold text-gray-700 mb-1">
                   Role Requested
                 </label>
+
                 <input
                   type="text"
                   required
@@ -117,6 +148,7 @@ export default function StartupCard({ startup, userRequest }) {
                 <label className="block text-xs font-bold text-gray-700 mb-1">
                   Introduction Message
                 </label>
+
                 <textarea
                   rows="4"
                   required
@@ -135,9 +167,10 @@ export default function StartupCard({ startup, userRequest }) {
                 >
                   Cancel
                 </button>
+
                 <button
                   type="submit"
-                  disabled={loading}
+                  disabled={loading || isStartupFull}
                   className="flex-1 py-2.5 rounded-xl bg-black hover:bg-gray-800 text-white text-xs font-bold cursor-pointer disabled:opacity-50"
                 >
                   {loading ? "Sending..." : "Submit Pitch"}

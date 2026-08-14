@@ -338,18 +338,121 @@ const getAdminJoinRequests = async (req, res) => {
 // @desc    Update join request status (approve/reject)
 // @route   PUT /api/admin/join-requests/:id
 // @access  Public (Admin)
+// @desc    Update join request status (approve/reject)
+// @route   PUT /api/admin/join-requests/:id
+// @access  Public (Admin)
 const updateJoinRequestStatus = async (req, res) => {
   try {
     const { status } = req.body;
-    const updatedRequest = await JoinRequest.findByIdAndUpdate(
-      req.params.id,
-      { status },
-      { new: true },
-    );
 
-    res.status(200).json({ success: true, joinRequest: updatedRequest });
+    // -----------------------------------------
+    // Validate status
+    // -----------------------------------------
+    const newStatus = String(status || "").toLowerCase();
+
+    if (!["pending", "approved", "rejected"].includes(newStatus)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid status. Use pending, approved or rejected.",
+      });
+    }
+
+    // -----------------------------------------
+    // Find the join request
+    // -----------------------------------------
+    const joinRequest = await JoinRequest.findById(req.params.id);
+
+    if (!joinRequest) {
+      return res.status(404).json({
+        success: false,
+        message: "Join request not found",
+      });
+    }
+
+    // -----------------------------------------
+    // Prevent approving an already approved request
+    // -----------------------------------------
+    if (joinRequest.status === "approved" && newStatus === "approved") {
+      return res.status(400).json({
+        success: false,
+        message: "This join request is already approved",
+      });
+    }
+
+    // -----------------------------------------
+    // APPROVE REQUEST
+    // -----------------------------------------
+    if (newStatus === "approved") {
+      // Find startup and decrease seat atomically
+      const startup = await Startup.findOneAndUpdate(
+        {
+          _id: joinRequest.startup,
+          seatsNeeded: { $gt: 0 },
+        },
+        {
+          $inc: { seatsNeeded: -1 },
+        },
+        {
+          new: true,
+        },
+      );
+
+      // No startup or no seats available
+      if (!startup) {
+        return res.status(400).json({
+          success: false,
+          message: "No seats are available in this startup",
+        });
+      }
+
+      // Approve request
+      joinRequest.status = "approved";
+      await joinRequest.save();
+
+      return res.status(200).json({
+        success: true,
+        message: "Join request approved successfully",
+        joinRequest,
+        startup: {
+          _id: startup._id,
+          startupName: startup.startupName,
+          seatsNeeded: startup.seatsNeeded,
+        },
+      });
+    }
+
+    // -----------------------------------------
+    // REJECT REQUEST
+    // -----------------------------------------
+    if (newStatus === "rejected") {
+      joinRequest.status = "rejected";
+      await joinRequest.save();
+
+      return res.status(200).json({
+        success: true,
+        message: "Join request rejected successfully",
+        joinRequest,
+      });
+    }
+
+    // -----------------------------------------
+    // PENDING
+    // -----------------------------------------
+    joinRequest.status = "pending";
+    await joinRequest.save();
+
+    return res.status(200).json({
+      success: true,
+      message: "Join request status updated successfully",
+      joinRequest,
+    });
   } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
+    console.error("Error updating join request status:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+    });
   }
 };
 

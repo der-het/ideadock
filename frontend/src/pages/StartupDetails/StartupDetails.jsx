@@ -91,6 +91,10 @@ export default function StartupDetails() {
   // =====================================================
 
   const startupId = startup?._id || startup?.id;
+  const noSeatsAvailable =
+    startup?.seatsNeeded !== undefined &&
+    startup?.seatsNeeded !== null &&
+    Number(startup.seatsNeeded) <= 0;
 
   // =====================================================
   // PITCH MODAL STATES
@@ -173,6 +177,11 @@ export default function StartupDetails() {
   // =====================================================
 
   const handleOpenPitchModal = (startupData) => {
+    if (Number(startupData?.seatsNeeded) <= 0) {
+      setShowErrorNotification("This startup is currently full.");
+      return;
+    }
+
     const targetStartupId = startupData?._id || startupData?.id;
 
     if (isPitchSent(targetStartupId)) {
@@ -197,23 +206,22 @@ export default function StartupDetails() {
   // =====================================================
 
   const handleOpenJoinModal = (role) => {
+    if (noSeatsAvailable) {
+      setShowErrorNotification("This startup is currently full.");
+
+      setTimeout(() => {
+        setShowErrorNotification("");
+      }, 5000);
+
+      return;
+    }
+
     if (hasPitched) {
       showAlreadyJoinedMessage();
       return;
     }
 
-    if (!currentUser) {
-      navigate("/login");
-      return;
-    }
-
-    setSelectedRole(role?.title || "");
-
-    setSelectedRoleId(role?.id || role?._id || "general_role");
-
-    setPitchNote("");
-
-    setShowJoinModal(true);
+    // rest of your existing code...
   };
 
   // =====================================================
@@ -586,17 +594,24 @@ export default function StartupDetails() {
           <button
             type="button"
             onClick={() => handleOpenPitchModal(startup)}
-            disabled={hasPitched}
+            disabled={hasPitched || noSeatsAvailable}
             className={`w-full md:w-auto px-6 py-3.5 rounded-xl text-xs font-bold transition-all shadow-sm flex items-center justify-center gap-2 ${
               hasPitched
                 ? "bg-amber-50 text-amber-700 border border-amber-200 cursor-default"
-                : "bg-black text-white hover:bg-gray-800 hover:shadow-md cursor-pointer"
+                : noSeatsAvailable
+                  ? "bg-gray-100 text-gray-400 border border-gray-200 cursor-not-allowed"
+                  : "bg-black text-white hover:bg-gray-800 hover:shadow-md cursor-pointer"
             }`}
           >
             {hasPitched ? (
               <>
                 <CheckCircle2 className="w-4 h-4 text-amber-600" />
                 Pitch Sent
+              </>
+            ) : noSeatsAvailable ? (
+              <>
+                <Users className="w-4 h-4" />
+                Startup Full
               </>
             ) : (
               <>
@@ -738,11 +753,15 @@ export default function StartupDetails() {
                       <button
                         type="button"
                         onClick={() => handleOpenJoinModal(role)}
-                        disabled={isRoleRequested || hasPitched}
+                        disabled={
+                          isRoleRequested || hasPitched || noSeatsAvailable
+                        }
                         className={`w-full md:w-auto px-4 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 ${
                           isRoleRequested || hasPitched
                             ? "bg-amber-50 text-amber-700 border border-amber-200 cursor-not-allowed"
-                            : "bg-black text-white hover:bg-gray-900 cursor-pointer"
+                            : noSeatsAvailable
+                              ? "bg-gray-100 text-gray-400 border border-gray-200 cursor-not-allowed"
+                              : "bg-black text-white hover:bg-gray-900 cursor-pointer"
                         }`}
                       >
                         {isRoleRequested || hasPitched ? (
@@ -824,7 +843,7 @@ export default function StartupDetails() {
               <div className="flex justify-between items-center text-xs pt-2.5 border-t border-gray-50">
                 <span className="text-gray-400 flex items-center gap-1.5">
                   <Users className="w-4 h-4 text-gray-300" />
-                  Seats Needed
+                  Available Seats
                 </span>
 
                 <span className="font-bold text-gray-900 font-mono">

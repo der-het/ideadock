@@ -194,8 +194,89 @@ const updateProfile = async (req, res) => {
   }
 };
 
+// @desc    Change user password
+// @route   PUT /api/auth/change-password
+// @access  Public
+// @desc    Change user password
+// @route   PUT /api/auth/change-password
+// @access  Public
+const changePassword = async (req, res) => {
+  try {
+    const { userId, currentPassword, newPassword } = req.body;
+
+    // 1. Validate fields
+    if (!userId || !currentPassword || !newPassword) {
+      return res.status(400).json({
+        success: false,
+        message: "Please provide all password fields",
+      });
+    }
+
+    // 2. Validate new password length
+    if (newPassword.length < 6) {
+      return res.status(400).json({
+        success: false,
+        message: "New password must be at least 6 characters long",
+      });
+    }
+
+    // 3. Find user
+    const user = await User.findById(userId);
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+    }
+
+    // 4. Check current password
+    const isMatch = await bcrypt.compare(currentPassword, user.password);
+
+    if (!isMatch) {
+      return res.status(401).json({
+        success: false,
+        message: "Current password is incorrect",
+      });
+    }
+
+    // 5. Prevent same password
+    const samePassword = await bcrypt.compare(newPassword, user.password);
+
+    if (samePassword) {
+      return res.status(400).json({
+        success: false,
+        message: "New password must be different from your current password",
+      });
+    }
+
+    // 6. Hash new password
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(newPassword, salt);
+
+    // 7. Save new password
+    user.password = hashedPassword;
+
+    await user.save();
+
+    // 8. Success response
+    return res.status(200).json({
+      success: true,
+      message: "Password changed successfully",
+    });
+  } catch (error) {
+    console.error("Change password error:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: error.message || "Failed to change password",
+    });
+  }
+};
+
 module.exports = {
   registerUser,
   loginUser,
   updateProfile,
+  changePassword,
 };
